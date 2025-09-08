@@ -1,27 +1,49 @@
-**Contribution Guidelines**
+# 🚀 Contribution Guidelines
 
-Thank you for your interest in contributing to this project! Please take a moment to read through the following guidelines before submitting any contributions.
+Thank you for your interest in contributing to this project! 🙌 Before you dive in, please take a moment to review our guidelines to help us keep the community healthy and the project thriving.
 
-**1. License**
+---
 
-All files in this repository are provided under the MIT License (with modifications) with the following restrictions:
-Non-Commercial Use: The files are for personal use only. Commercial use of the files is prohibited unless explicitly granted permission.
-Redistribution: Redistribution, selling, or sharing of the files, in any form, is not allowed without explicit permission.
+## 📄 License
 
-**2. How to Contribute**
+All files in this repository are licensed under the **MIT License** (with some important restrictions):
 
-We welcome contributions! You can:
-Fork the repository: Feel free to fork the repository and make modifications for personal use or improvements.
-Pull Requests: If you have changes you'd like to share, please submit a pull request. Ensure that your changes align with the project’s goals and maintain the integrity of the files.
-Credit the original creator: If you modify or build upon the files, please credit the original author when redistributing the content.
+- 🚫 **Non-Commercial Use Only:** Files are for *personal use* only. Commercial use requires explicit permission.
+- 🔒 **No Redistribution:** Sharing, selling, or redistributing the files in any form is prohibited without prior approval.
 
-**3. Reporting Issues**
+---
 
-If you find any issues or need clarification, please open an issue in the repository. We are happy to help and discuss any concerns.
+## 🤝 How to Contribute
 
-**4. Commercial Use**
+We appreciate your contributions! Here’s how you can get involved:
 
-If you wish to use the files for commercial purposes or need to remove the watermark, please contact the project owner for licensing information.
-By contributing, you agree to abide by these terms to ensure the integrity and fair use of the files.
+- 🍴 **Fork the repository:** Make your own copy to experiment and improve.
+- 🔄 **Pull Requests:** Submit PRs with meaningful changes that align with the project’s goals and maintain file integrity.
+- 🎖️ **Credit the original author:** If you modify or build on these files, please acknowledge the original creator when sharing your work.
 
-Thank you for your support and collaboration!
+---
+
+## 🐛 Reporting Issues
+
+Found a bug or have a question? 
+
+- Please open an [issue](https://github.com/9112000/FFItems/issues) in this repo.
+- We’re always happy to assist and discuss your concerns.
+
+---
+
+## 💼 Commercial Use
+
+Planning to use the files commercially or want to remove the watermark?
+
+- 📩 Contact the project owner for licensing details and permissions.
+
+---
+
+By contributing, you agree to respect these guidelines, helping us foster a fair and supportive project environment.
+
+---
+
+🙏 **Thank you for your support and collaboration!** Together, we make this project better every day.
+
+---
