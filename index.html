@@ -9,7 +9,6 @@
   <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="src/styles.css" />
   <meta name="description" content="Search Free Fire game items by name or description to retrieve item ID, name & details. Battle in Style and be the last survivor!" />
   <meta property="og:description" content="Search Free Fire game items by name or description to retrieve item ID, name & details." />
   <meta name="keywords"content="Free Fire items, Free Fire item ID, FF items list, Starexx FF, Garena Free Fire, battle royale, Starexx Items, Free Fire items, Free Fire item ID, Garena Free Fire, FF items database, weapon skins, character skins, emotes, bundles, parachutes, loot crates, pet skins, Free Fire cosmetics, Free Fire shop items, FF rare items, FF weapon upgrades, Free Fire gun skins, FF character costumes, Free Fire emoticons, FF vehicle skins, Free Fire gloo wall skins, FF backpacks, Free Fire melee weapons"/>
@@ -20,6 +19,7 @@
   <meta property="og:url" content="https://9112000.github.io/FFItems/" />
   <meta name="twitter:card" content="summary_large_image" />
   <title>Starexx Items</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <meta name="twitter:title" content="FFItems" />
   <meta name="twitter:description" content="Quickly find Free Fire item IDs, names & details with Starexx Items." />
   <meta name="twitter:image" content="https://9112000.github.io/FFItems/icons/android-chrome-192x192.png" />
@@ -27,111 +27,997 @@
   <link rel="canonical" href="https://9112000.github.io/FFItems/" />
   <meta name="robots" content="index, follow" />
  </head>
- <body>
-  <div class="loading-dot" id="loadingDot"></div>
-  <div class="header" id="header">
-   <div class="header-tabs" id="headerTabs"></div>
-   <div class="header-menu-button" id="menuButton">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="240" height="240">
-     <rect x="3" y="6" width="15" height="12" rx="4" ry="4" fill="none" stroke="#9b9b9b" stroke-width="2" stroke-linejoin="round" />
-     <path d="M9 6 L9 18" fill="none" stroke="#9b9b9b" stroke-width="2" stroke-linecap="round" />
-    </svg>
-   </div>
+ <style>
+   :root {
+  --bg-primary: #000000;
+  --bg-secondary: #111111;
+  --bg-tertiary: #121212;
+  --bg-card: transparent;
+  --border-primary: #222222;
+  --border-secondary: #333333;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #888888;
+  --accent-primary: #ffffff;
+  --accent-secondary: #333;
+  --hover-primary: #181818;
+  --modal-bg: #111111;
+  --modal-border: #222222;
+  --json-key: #ff79c6;
+  --json-string: #f1fa8c;
+  --json-number: #bd93f9;
+  --json-boolean: #ff79c6;
+  --json-null: #ff79c6;
+  --header-height: 60px;
+  --pill-radius: 20px;
+  --modal-radius: 20px;
+  --box-radius: 25px;
+  --transition-fast: 0.15s ease;
+  --transition-medium: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  --transition-modal: 0.4s cubic-bezier(.4,0,.2,1);
+  --transition-flip: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-modal: 0 10px 30px rgba(0,0,0,0.5);
+  --blur-backdrop: blur(4px);
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-size-sm: 6px;
+  --font-size-md: 12px;
+  --font-size-lg: 14px;
+  --font-size-xl: 16px;
+  --spacing-xs: 12;
+  --spacing-sm: 8px;
+  --spacing-md: 8px;
+  --spacing-lg: 15px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 25px;
+  --icon-size: 70%;
+  --modal-icon-size: 80%;
+  --grid-cols: 5;
+  --items-per-page: 100;
+  --max-width: 800px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-primary);
+  padding: var(--spacing-md) var(--spacing-xl);
+  z-index: 1000;
+  height: var(--header-height);
+  gap: var(--spacing-md);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.header::-webkit-scrollbar {
+  display: none;
+}
+
+.header {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.header-pill {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--pill-radius);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  cursor: pointer;
+  transition: background var(--transition-medium);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  font-family: var(--font-main);
+  white-space: nowrap;
+}
+
+.header-pill:hover {
+  background: var(--hover-primary);
+}
+
+.header-pill.active {
+  background: var(--accent-secondary);
+}
+
+.mode-tabs {
+  display: flex;
+  background: var(--bg-tertiary);
+  border-radius: var(--pill-radius);
+  padding: var(--spacing-xs);
+  gap: var(--spacing-xs);
+}
+
+.mode-tab {
+  padding: 6px var(--spacing-lg);
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition-medium);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  font-family: var(--font-main);
+}
+
+.mode-tab.active {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.main-content {
+  margin-top: 50px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), 1fr);
+  gap: var(--spacing-md);
+  width: 90%;
+  max-width: var(--max-width);
+  margin-bottom: var(--spacing-xl);
+}
+
+.box {
+  background: var(--bg-tertiary);
+  border-radius: var(--box-radius);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-medium);
+  user-select: none;
+  border: 1px solid var(--border-primary);
+  overflow: hidden;
+}
+
+.box:active {
+  transform: scale(0.9);
+  background: var(--hover-primary);
+}
+
+.icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  object-fit: contain;
+}
+
+.modal {
+  position: fixed;
+  border-radius: var(--modal-radius);
+  background: var(--modal-bg);
+  color: var(--text-primary);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all var(--transition-modal);
+  overflow: hidden;
+  box-shadow: var(--shadow-modal);
+  perspective: 1000px;
+  border: 1px solid var(--modal-border);
+}
+
+.modal-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform var(--transition-flip);
+}
+
+.modal.flipped .modal-content {
+  transform: rotateY(180deg);
+}
+
+.modal-front, .modal-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  font-size: 10px;
+  backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--modal-radius);
+  cursor: pointer;
+}
+
+.modal-back {
+  background: var(--bg-card);
+  transform: rotateY(180deg);
+  padding: var(--spacing-lg);
+  overflow: auto;
+}
+
+.modal-icon {
+  width: var(--modal-icon-size);
+  height: var(--modal-icon-size);
+  object-fit: contain;
+  cursor: pointer;
+}
+
+.json-data {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.3;
+  white-space: pre-wrap;
+  word-break: break-all;
+  width: 100%;
+  height: 100%;
+}
+
+.json-key { color: var(--json-key); }
+.json-string { color: var(--json-string); }
+.json-number { color: var(--json-number); }
+.json-boolean { color: var(--json-boolean); }
+.json-null { color: var(--json-null); }
+
+.fade-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: var(--blur-backdrop);
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+  z-index: 50;
+  pointer-events: none;
+}
+
+.fade-bg.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-radius: var(--modal-radius) var(--modal-radius) 0 0;
+  padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xxl) var(--spacing-xl);
+  z-index: 150;
+  transform: translateY(100%);
+  transition: transform var(--transition-slow);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.bottom-sheet.active {
+  transform: translateY(0);
+}
+
+.sheet-header-line {
+  width: 40px;
+  height: 4px;
+  background: var(--border-secondary);
+  border-radius: 2px;
+  margin: 0 auto var(--spacing-xl) auto;
+}
+
+.pages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.sheet-page-btn {
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  border-radius: 30px;
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: background var(--transition-medium);
+  text-align: center;
+  font-size: var(--font-size-lg);
+  font-family: var(--font-main);
+}
+
+.sheet-page-btn.active {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.sheet-page-btn:hover {
+  background: var(--hover-primary);
+  border: 1px solid var(--border-primary);
+}
+
+.search-sheet {
+  padding: var(--spacing-xl);
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--spacing-lg) 18px;
+  border-radius: 30px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-lg);
+  font-family: var(--font-main);
+}
+
+.search-hint {
+  font-size: var(--font-size-md);
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: var(--spacing-md);
+  font-family: var(--font-main);
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-muted);
+  font-family: var(--font-main);
+}
+
+.loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-muted);
+  font-family: var(--font-main);
+}
+
+.search-results-text {
+  font-size: var(--font-size-md);
+  color: #666;
+  text-align: center;
+  margin: var(--spacing-md) 0;
+  font-family: var(--font-main);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.filter-btn {
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  border-radius: 30px;
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: background var(--transition-medium);
+  text-align: center;
+  font-size: var(--font-size-md);
+  font-family: var(--font-main);
+}
+
+.filter-btn.active {
+  background: white;
+  color: black;
+}
+
+.filter-btn:hover {
+  background: var(--hover-primary);
+}
+
+.footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-primary);
+  padding: var(--spacing-md) var(--spacing-xl);
+  border: none;
+  margin-top: auto;
+  margin-bottom: 20px;
+}
+
+.footer-pill {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--pill-radius);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  font-family: var(--font-main);
+  cursor: pointer;
+}
+ </style>
+<body>
+<div class="header">
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="itemsTab">Items</button>
+    <button class="mode-tab" id="iconsTab">Icons</button>
   </div>
-  <div class="sidebar" id="sidebar">
-   <div class="sidebar-close" id="sidebarClose">
-    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-     <path d="M18 6L6 18M6 6l12 12" />
-    </svg>
-   </div>
-   <div class="sidebar-search">
-    <div class="sidebar-search-icon">
-     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-     </svg>
-    </div>
-    <textarea class="sidebar-textarea" id="search" placeholder="Search by item details"></textarea>
-   </div>
-   <div class="data-type-selector">
-    <button class="data-type-button active" id="itemsButton">Items</button>
-    <button class="data-type-button" id="assetsButton">Assets</button>
-   </div>
-   <div class="sidebar-menu">
-    <div class="sidebar-menu-item" id="rarityMenu">
-     <span>Rarity</span>
-     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M9 5l7 7-7 7" />
-     </svg>
-    </div>
-    <div class="sidebar-submenu" id="raritySubmenu">
-     <div class="sidebar-filter-options" id="filter-Rare-buttons"></div>
-    </div>
-    <div class="sidebar-menu-item" id="sortMenu">
-     <span>Sort By</span>
-     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M9 5l7 7-7 7" />
-     </svg>
-    </div>
-    <div class="sidebar-submenu" id="sortSubmenu">
-     <div class="sidebar-filter-options" id="filter-sort-buttons"></div>
-    </div>
-    <div class="sidebar-menu-item" id="collectionsMenu">
-     <span>Collections</span>
-     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M9 5l7 7-7 7" />
-     </svg>
-    </div>
-    <div class="sidebar-submenu" id="collectionsSubmenu">
-     <div class="sidebar-filter-options" id="filter-collectionType-buttons"></div>
-    </div>
-    <div class="sidebar-menu-item" id="typesMenu">
-     <span>Item Types</span>
-     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M9 5l7 7-7 7" />
-     </svg>
-    </div>
-    <div class="sidebar-submenu" id="typesSubmenu">
-     <div class="sidebar-filter-options" id="filter-itemType-buttons"></div>
-    </div>
-   </div>
-   <div class="github-footer">
-    <svg class="github-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="window.open('https://github.com/9112000/FFItems', '_blank')">
-     <path
-      d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"   />
-    </svg>
-   </div>
+  <div class="header-pill type-filter" id="typePill">Choose Type</div>
+  <div class="header-pill rarity-filter" id="rarityPill">Choose Rarity</div>
+  <div class="header-pill" id="searchPill">All</div>
+</div>
+
+<div class="main-content">
+  <div id="searchResults" class="search-results-text"></div>
+  <div class="grid" id="grid">
+    <div class="loading"></div>
   </div>
-  <div class="container" id="container" style="display: none;">
-   <div class="grid-container" id="iconGrid"></div>
-   <div class="pagination-container">
-    <div class="pagination" id="pagination"></div>
-   </div>
+
+  <div class="footer">
+    <div class="footer-pill" id="pagePill">Page 1</div>
   </div>
-  <div class="modal" id="modal">
-   <div class="modal-bg" id="modalBg"></div>
-   <div class="modal-content">
-    <img id="modalImage" alt="Item Image" />
-    <p>
-     <b id="modalDescription"></b>
-     <br />
-     <span id="modalDescription2"></span>
-    </p>
-    <div class="divider"></div>
-    <p>
-     <b>Item ID: </b>
-     <span id="modalItemId"></span>
-     <br />
-     <b>Icon: </b>
-     <span id="modalIconName"></span>
-    </p>
-    <div class="divider"></div>
-    <p>
-     <span id="modalType"></span>
-     <span id="modalRare"></span>
-    </p>
-    <button class="modal-close" id="modalClose">Tap to close</button>
-   </div>
-  </div>
-  <script src="src/script.js"></script>
- </body>
+</div>
+
+<div class="fade-bg" id="fadeBg"></div>
+
+<div class="bottom-sheet" id="pageSheet">
+  <div class="sheet-header-line"></div>
+  <div class="pages-grid" id="pagesGrid"></div>
+</div>
+
+<div class="bottom-sheet search-sheet" id="searchSheet">
+  <div class="sheet-header-line"></div>
+  <input type="text" class="search-input" id="searchInput" placeholder="Search by name, item ID or icon...">
+  <div class="search-hint">Type to search through all items</div>
+</div>
+
+<div class="bottom-sheet" id="typeSheet">
+  <div class="sheet-header-line"></div>
+  <div class="filter-grid" id="typeGrid"></div>
+</div>
+
+<div class="bottom-sheet" id="raritySheet">
+  <div class="sheet-header-line"></div>
+  <div class="filter-grid" id="rarityGrid"></div>
+</div>
+<script>
+const grid = document.getElementById('grid');
+const fadeBg = document.getElementById('fadeBg');
+const pagePill = document.getElementById('pagePill');
+const searchPill = document.getElementById('searchPill');
+const typePill = document.getElementById('typePill');
+const rarityPill = document.getElementById('rarityPill');
+const pageSheet = document.getElementById('pageSheet');
+const searchSheet = document.getElementById('searchSheet');
+const typeSheet = document.getElementById('typeSheet');
+const raritySheet = document.getElementById('raritySheet');
+const searchInput = document.getElementById('searchInput');
+const pagesGrid = document.getElementById('pagesGrid');
+const typeGrid = document.getElementById('typeGrid');
+const rarityGrid = document.getElementById('rarityGrid');
+const searchResults = document.getElementById('searchResults');
+const itemsTab = document.getElementById('itemsTab');
+const iconsTab = document.getElementById('iconsTab');
+
+let activeClone = null;
+let originalBox = null;
+let currentPage = 1;
+const itemsPerPage = 100;
+let allItems = [];
+let allIcons = [];
+let filteredItems = [];
+let filteredIcons = [];
+let totalPages = 1;
+let currentSearchQuery = "";
+let currentMode = "items";
+let currentType = "";
+let currentRarity = "";
+let allTypes = [];
+let allRarities = [];
+
+async function fetchData() {
+  try {
+    const itemsResponse = await fetch('assets/itemData.json');
+    if (!itemsResponse.ok) throw new Error('ERROR [JSON]:items');
+    allItems = await itemsResponse.json();
+    
+    allTypes = [...new Set(allItems.map(item => item.type).filter(Boolean))].sort();
+    allRarities = [...new Set(allItems.map(item => item.Rare).filter(Boolean))]
+    .filter(rarity => rarity !== "255" && rarity !== "NONE")
+    .sort();
+    const iconsResponse = await fetch('assets/assets.json');
+    if (!iconsResponse.ok) throw new Error('ERROR [JSON]:icons');
+    const iconsData = await iconsResponse.json();
+    
+    if (Array.isArray(iconsData)) {
+      allIcons = iconsData;
+    } else if (typeof iconsData === 'object' && iconsData !== null) {
+      allIcons = Object.values(iconsData).filter(item => typeof item === 'string');
+    } else {
+      allIcons = [];
+    }
+    
+    filteredItems = [...allItems];
+    filteredIcons = [...allIcons];
+    totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+    renderGrid();
+    updateHeaderPills();
+    updateSearchResultsText();
+  } catch (error) {
+    grid.innerHTML = '<div class="no-results">Failed to load data. Please check if JSON files exist.</div>';
+  }
+}
+
+function renderGrid(page = 1, query = "", type = "", rarity = "") {
+  grid.innerHTML = "";
+  
+  if (currentMode === "items") {
+    filteredItems = allItems.filter(item => {
+      const matchesSearch = !query || 
+        item.name?.toLowerCase().includes(query.toLowerCase()) ||
+        item.itemID?.toString().includes(query) ||
+        item.icon?.toLowerCase().includes(query.toLowerCase()) ||
+        item.description?.toLowerCase().includes(query.toLowerCase());
+      
+      const matchesType = !type || item.type === type;
+      const matchesRarity = !rarity || item.Rare === rarity;
+      
+      return matchesSearch && matchesType && matchesRarity;
+    });
+    
+    currentSearchQuery = query;
+    currentType = type;
+    currentRarity = rarity;
+    
+    totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+    
+    if (filteredItems.length === 0) {
+      grid.innerHTML = '<div class="no-results">No items found matching your filters</div>';
+      updateHeaderPills();
+      updateSearchResultsText();
+      return;
+    }
+    
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredItems.length);
+    const itemsToShow = filteredItems.slice(startIndex, endIndex);
+    
+    itemsToShow.forEach(item => {
+      const box = document.createElement('div');
+      box.className = 'box';
+      
+      const icon = document.createElement('img');
+      icon.className = 'icon';
+      icon.src = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${item.icon}.png`;
+      icon.alt = item.name || 'Item Icon';
+      icon.onerror = function() {
+        this.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
+      };
+      
+      box.appendChild(icon);
+      box.addEventListener('click', () => openModal(box, item));
+      grid.appendChild(box);
+    });
+  } else {
+    if (query) {
+      filteredIcons = allIcons.filter(iconName => 
+        iconName.toLowerCase().includes(query.toLowerCase())
+      );
+      currentSearchQuery = query;
+    } else {
+      filteredIcons = [...allIcons];
+      currentSearchQuery = "";
+    }
+    
+    totalPages = Math.ceil(filteredIcons.length / itemsPerPage);
+    
+    if (filteredIcons.length === 0) {
+      grid.innerHTML = '<div class="no-results">No icons found matching your search</div>';
+      updateHeaderPills();
+      updateSearchResultsText();
+      return;
+    }
+    
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredIcons.length);
+    const iconsToShow = filteredIcons.slice(startIndex, endIndex);
+    
+    iconsToShow.forEach(iconName => {
+      const box = document.createElement('div');
+      box.className = 'box';
+      
+      const icon = document.createElement('img');
+      icon.className = 'icon';
+      
+      if (iconName.includes('https://')) {
+        icon.src = iconName;
+      } else {
+        icon.src = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
+      }
+      
+      icon.alt = iconName;
+      icon.onerror = function() {
+        this.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
+      };
+      
+      box.appendChild(icon);
+      
+      const iconData = {
+        icon: extractIconName(iconName)
+      };
+      
+      box.addEventListener('click', () => openModal(box, iconData));
+      grid.appendChild(box);
+    });
+  }
+  
+  updateSearchResultsText();
+}
+
+function extractIconName(iconString) {
+  if (iconString.includes('https://')) {
+    const url = new URL(iconString);
+    const pathSegments = url.pathname.split('/');
+    const fileName = pathSegments[pathSegments.length - 1];
+    return fileName.replace('.png', '');
+  }
+  return iconString;
+}
+
+function updateHeaderPills() {
+  pagePill.textContent = `Page ${currentPage}/${totalPages}`;
+  
+  if (currentSearchQuery) {
+    searchPill.textContent = currentSearchQuery;
+  } else {
+    searchPill.textContent = "Search";
+  }
+  
+  if (currentMode === "items") {
+    document.querySelectorAll('.type-filter, .rarity-filter').forEach(el => {
+      el.style.display = 'block';
+    });
+    
+    if (currentType) {
+      typePill.textContent = currentType;
+      typePill.classList.add('active');
+    } else {
+      typePill.textContent = "Type";
+      typePill.classList.remove('active');
+    }
+    
+    if (currentRarity) {
+      let displayRarity = currentRarity;
+      if (currentRarity === 'ORANGE_PLUS') displayRarity = 'ORANGE+';
+      if (currentRarity === 'PURPLE_PLUS') displayRarity = 'PURPLE+';
+      rarityPill.textContent = displayRarity;
+      rarityPill.classList.add('active');
+    } else {
+      rarityPill.textContent = "Rarity";
+      rarityPill.classList.remove('active');
+    }
+  } else {
+    document.querySelectorAll('.type-filter, .rarity-filter').forEach(el => {
+      el.style.display = 'none';
+    });
+  }
+}
+
+function updateSearchResultsText() {
+  if (currentSearchQuery || currentType || currentRarity) {
+    const itemCount = currentMode === "items" ? filteredItems.length : filteredIcons.length;
+    let filterText = [];
+    if (currentSearchQuery) filterText.push(`"${currentSearchQuery}"`);
+    if (currentType) filterText.push(`Type: ${currentType}`);
+    if (currentRarity) {
+      let displayRarity = currentRarity;
+      if (currentRarity === 'ORANGE_PLUS') displayRarity = 'ORANGE+';
+      if (currentRarity === 'PURPLE_PLUS') displayRarity = 'PURPLE+';
+      filterText.push(`Rarity: ${displayRarity}`);
+    }
+    
+    searchResults.textContent = `Showing results for ${filterText.join(', ')} - ${itemCount} ${currentMode} found`;
+  } else {
+    searchResults.textContent = "";
+  }
+}
+
+function openTypeSheet() {
+  typeGrid.innerHTML = "";
+  
+  const allBtn = document.createElement('button');
+  allBtn.className = `filter-btn ${!currentType ? 'active' : ''}`;
+  allBtn.textContent = 'All Types';
+  allBtn.onclick = () => {
+    renderGrid(1, currentSearchQuery, "", currentRarity);
+    updateHeaderPills();
+    closeAllSheets();
+  };
+  typeGrid.appendChild(allBtn);
+  
+  allTypes.forEach(type => {
+    const btn = document.createElement('button');
+    btn.className = `filter-btn ${currentType === type ? 'active' : ''}`;
+    btn.textContent = type;
+    btn.onclick = () => {
+      renderGrid(1, currentSearchQuery, type, currentRarity);
+      updateHeaderPills();
+      closeAllSheets();
+    };
+    typeGrid.appendChild(btn);
+  });
+  
+  typeSheet.classList.add('active');
+  fadeBg.classList.add('active');
+}
+
+function openRaritySheet() {
+  rarityGrid.innerHTML = "";
+  
+  const allBtn = document.createElement('button');
+  allBtn.className = `filter-btn ${!currentRarity ? 'active' : ''}`;
+  allBtn.textContent = 'All Rarities';
+  allBtn.onclick = () => {
+    renderGrid(1, currentSearchQuery, currentType, "");
+    updateHeaderPills();
+    closeAllSheets();
+  };
+  rarityGrid.appendChild(allBtn);
+  
+  allRarities.forEach(rarity => {
+    const btn = document.createElement('button');
+    btn.className = `filter-btn ${currentRarity === rarity ? 'active' : ''}`;
+    
+    let displayName = rarity;
+    if (rarity === 'ORANGE_PLUS') {
+      displayName = 'ORANGE+';
+    } else if (rarity === 'PURPLE_PLUS') {
+    displayName = 'PURPLE+';
+    }
+    
+    btn.textContent = displayName;
+    btn.onclick = () => {
+      renderGrid(1, currentSearchQuery, currentType, rarity);
+      updateHeaderPills();
+      closeAllSheets();
+    };
+    rarityGrid.appendChild(btn);
+  });
+  
+  raritySheet.classList.add('active');
+  fadeBg.classList.add('active');
+}
+
+function openPageSheet() {
+  pagesGrid.innerHTML = "";
+  
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'sheet-page-btn';
+    btn.textContent = i;
+    if (i === currentPage) btn.classList.add('active');
+    btn.onclick = () => {
+      currentPage = i;
+      renderGrid(currentPage, currentSearchQuery, currentType, currentRarity);
+      updateHeaderPills();
+      closeAllSheets();
+    };
+    pagesGrid.appendChild(btn);
+  }
+  
+  pageSheet.classList.add('active');
+  fadeBg.classList.add('active');
+}
+
+function openSearchSheet() {
+  searchInput.value = currentSearchQuery;
+  searchSheet.classList.add('active');
+  fadeBg.classList.add('active');
+  
+  setTimeout(() => {
+    searchInput.focus();
+  }, 300);
+}
+
+function closeAllSheets() {
+  pageSheet.classList.remove('active');
+  searchSheet.classList.remove('active');
+  typeSheet.classList.remove('active');
+  raritySheet.classList.remove('active');
+  fadeBg.classList.remove('active');
+}
+
+function syntaxHighlight(json) {
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+    let cls = 'json-number';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = 'json-key';
+      } else {
+        cls = 'json-string';
+      }
+    } else if (/true|false/.test(match)) {
+      cls = 'json-boolean';
+    } else if (/null/.test(match)) {
+      cls = 'json-null';
+    }
+    return '<span class="' + cls + '">' + match + '</span>';
+  });
+}
+
+function openModal(box, item) {
+  if (activeClone) return;
+
+  const rect = box.getBoundingClientRect();
+  const modal = document.createElement('div');
+  modal.classList.add('modal');
+  modal.style.left = rect.left + 'px';
+  modal.style.top = rect.top + 'px';
+  modal.style.width = rect.width + 'px';
+  modal.style.height = rect.height + 'px';
+
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content';
+
+  const modalFront = document.createElement('div');
+  modalFront.className = 'modal-front';
+  
+  const modalIcon = document.createElement('img');
+  modalIcon.className = 'modal-icon';
+  
+  if (item.icon.includes('https://')) {
+    modalIcon.src = item.icon;
+  } else {
+    modalIcon.src = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${item.icon}.png`;
+  }
+  
+  modalIcon.alt = item.name || item.icon;
+  modalIcon.onerror = function() {
+    this.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
+  };
+  
+  modalFront.appendChild(modalIcon);
+
+  const modalBack = document.createElement('div');
+  modalBack.className = 'modal-back';
+  
+  const jsonData = document.createElement('div');
+  jsonData.className = 'json-data';
+  jsonData.innerHTML = syntaxHighlight(JSON.stringify(item, null, 2));
+  
+  modalBack.appendChild(jsonData);
+
+  modalIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    modal.classList.add('flipped');
+  });
+
+  modalBack.addEventListener('click', (e) => {
+    e.stopPropagation();
+    modal.classList.remove('flipped');
+  });
+
+  modalContent.appendChild(modalFront);
+  modalContent.appendChild(modalBack);
+  modal.appendChild(modalContent);
+
+  document.body.appendChild(modal);
+
+  requestAnimationFrame(() => {
+    fadeBg.classList.add('active');
+    modal.style.left = '50%';
+    modal.style.top = '50%';
+    modal.style.transform = 'translate(-50%, -50%) scale(1.8)';
+    modal.style.width = '200px';
+    modal.style.height = '200px';
+  });
+
+  fadeBg.addEventListener('click', closeModal);
+
+  activeClone = modal;
+  originalBox = box;
+}
+
+function closeModal() {
+  if (!activeClone || !originalBox) return;
+
+  fadeBg.removeEventListener('click', closeModal);
+  
+  const rect = originalBox.getBoundingClientRect();
+  fadeBg.classList.remove('active');
+
+  if (activeClone.classList.contains('flipped')) {
+    activeClone.classList.remove('flipped');
+    
+    setTimeout(() => {
+      activeClone.style.left = rect.left + 'px';
+      activeClone.style.top = rect.top + 'px';
+      activeClone.style.width = rect.width + 'px';
+      activeClone.style.height = rect.height + 'px';
+      activeClone.style.transform = 'translate(0,0) scale(1)';
+
+      setTimeout(() => {
+        activeClone.remove();
+        activeClone = null;
+      }, 400);
+    }, 300);
+  } else {
+    activeClone.style.left = rect.left + 'px';
+    activeClone.style.top = rect.top + 'px';
+    activeClone.style.width = rect.width + 'px';
+    activeClone.style.height = rect.height + 'px';
+    activeClone.style.transform = 'translate(0,0) scale(1)';
+
+    setTimeout(() => {
+      activeClone.remove();
+      activeClone = null;
+    }, 400);
+  }
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  currentPage = 1;
+  currentSearchQuery = "";
+  currentType = "";
+  currentRarity = "";
+  
+  itemsTab.classList.toggle('active', mode === 'items');
+  iconsTab.classList.toggle('active', mode === 'icons');
+  
+  searchInput.placeholder = mode === 'items' 
+    ? 'Search by name, item ID or icon...' 
+    : 'Search icons...';
+  
+  renderGrid();
+  updateHeaderPills();
+}
+
+searchInput.addEventListener('input', (e) => {
+  currentPage = 1;
+  renderGrid(currentPage, e.target.value.trim(), currentType, currentRarity);
+  updateHeaderPills();
+});
+
+pagePill.addEventListener('click', openPageSheet);
+searchPill.addEventListener('click', openSearchSheet);
+typePill.addEventListener('click', openTypeSheet);
+rarityPill.addEventListener('click', openRaritySheet);
+
+itemsTab.addEventListener('click', () => switchMode('items'));
+iconsTab.addEventListener('click', () => switchMode('icons'));
+
+fadeBg.addEventListener('click', () => {
+  closeModal();
+  closeAllSheets();
+});
+
+fetchData();
+</script>
+</body>
 </html>
