@@ -44,11 +44,6 @@
     --hover-primary: #181818;
     --modal-bg: #111111;
     --modal-border: #222222;
-    --json-key: #ff79c6;
-    --json-string: #f1fa8c;
-    --json-number: #bd93f9;
-    --json-boolean: #ff79c6;
-    --json-null: #ff79c6;
     --header-height: 60px;
     --pill-radius: 20px;
     --modal-radius: 20px;
@@ -209,7 +204,9 @@
     white-space: nowrap;
     max-width: 100%;
   }
-
+  ::-webkit-scrollbar {
+    display: none;
+  }
   .header::-webkit-scrollbar {
     display: none;
   }
@@ -324,8 +321,7 @@
   .modal {
     position: fixed;
     border-radius: var(--modal-radius);
-    background: rgba(20,20,20, 0.9);
-    backdrop-filter: var(--blur-backdrop);
+    background: var(--modal-bg);
     color: var(--text-primary);
     z-index: 100;
     display: flex;
@@ -375,8 +371,7 @@
     bottom: 20px;
     left: 20px;
     right: 20px;
-    background: rgba(20, 20, 20, 0.9);
-    backdrop-filter: blur(15px);
+    background: var(--modal-bg);
     border-radius: 30px;
     padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xxl) var(--spacing-xl);
     z-index: 150;
@@ -426,9 +421,9 @@
   .search-input {
     width: 100%;
     padding: var(--spacing-lg) 18px;
-    border-radius: 30px;
+    border-radius: 20px;
     border: 1px solid var(--border-primary);
-    background: var(--bg-secondary);
+    background: transparent;
     color: var(--text-primary);
     font-family: inherit;
     outline: none;
@@ -480,10 +475,10 @@
     background: transparent;
     color: var(--text-primary);
     border: none;
-    border-radius: 30px;
+    border-radius: 20px;
     padding: var(--spacing-md);
     cursor: pointer;
-    transition: background var(--transition-medium);
+    transition: transform var(--transition-medium), background var(--transition-medium);
     text-align: center;
     font-size: var(--font-size-md);
     font-family: var(--font-main);
@@ -496,8 +491,8 @@
     color: black;
   }
 
-  .filter-btn:hover {
-    background: var(--hover-primary);
+  .filter-btn:active {
+    transform: scale(0.9);
   }
 
   .footer {
@@ -529,25 +524,29 @@
   }
   
 .details-card {
-    position: fixed;
-    background: var(--modal-bg);
-    border-radius: var(--modal-radius);
-    box-shadow: var(--shadow-modal);
-    border: 1px solid var(--modal-border);
-    padding: 15px;
-    z-index: 101;
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    overflow-y: auto;
-    transform: translateY(30px);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: fixed;
+  background: var(--modal-bg);
+  border-radius: var(--modal-radius);
+  box-shadow: var(--shadow-modal);
+  border: 1px solid var(--modal-border);
+  padding: 15px;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  overflow-y: auto;
+  transform: translateY(30px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  max-width: 90vw;
+  box-sizing: border-box;
+  left: 50%;
+  transform: translateX(-50%) translateY(30px);
 }
 
 .details-card.active {
-    transform: translateY(0);
-    opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
 }
 
 .details-title {
@@ -580,6 +579,24 @@
 .details-property-value {
     font-weight: 400;
     color: var(--text-secondary);
+}
+
+.modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.modal-container.active {
+    pointer-events: all;
 }
 </style>
 <body>
@@ -623,46 +640,48 @@
   <div class="filter-grid" id="rarityGrid"></div>
 </div>
 <script>
-class FFItemsApp {
-    constructor() {
-        this.grid = document.getElementById('grid');
-        this.fadeBg = document.getElementById('fadeBg');
-        this.pagePill = document.getElementById('pagePill');
-        this.searchPill = document.getElementById('searchPill');
-        this.typePill = document.getElementById('typePill');
-        this.rarityPill = document.getElementById('rarityPill');
-        this.pageSheet = document.getElementById('pageSheet');
-        this.searchSheet = document.getElementById('searchSheet');
-        this.typeSheet = document.getElementById('typeSheet');
-        this.raritySheet = document.getElementById('raritySheet');
-        this.searchInput = document.getElementById('searchInput');
-        this.pagesGrid = document.getElementById('pagesGrid');
-        this.typeGrid = document.getElementById('typeGrid');
-        this.rarityGrid = document.getElementById('rarityGrid');
-        this.searchResults = document.getElementById('searchResults');
-        this.itemsTab = document.getElementById('itemsTab');
-        this.iconsTab = document.getElementById('iconsTab');
+  const FFItemsApp = (function() {
+    let state = {
+        grid: null,
+        fadeBg: null,
+        pagePill: null,
+        searchPill: null,
+        typePill: null,
+        rarityPill: null,
+        pageSheet: null,
+        searchSheet: null,
+        typeSheet: null,
+        raritySheet: null,
+        searchInput: null,
+        pagesGrid: null,
+        typeGrid: null,
+        rarityGrid: null,
+        searchResults: null,
+        itemsTab: null,
+        iconsTab: null,
         
-        this.activeClone = null;
-        this.originalBox = null;
-        this.detailsCard = null;
-        this.currentPage = 1;
-        this.itemsPerPage = 100;
-        this.allItems = [];
-        this.allIcons = [];
-        this.filteredItems = [];
-        this.filteredIcons = [];
-        this.totalPages = 1;
-        this.currentSearchQuery = "";
-        this.currentMode = "items";
-        this.currentType = "";
-        this.currentRarity = "";
-        this.allTypes = [];
-        this.allRarities = [];
-        this.imageCache = new Map();
-        this.failedImages = new Set();
+        activeClone: null,
+        originalBox: null,
+        detailsCard: null,
+        modalContainer: null,
+        currentPage: 1,
+        itemsPerPage: 100,
+        allItems: [],
+        allIcons: [],
+        filteredItems: [],
+        filteredIcons: [],
+        totalPages: 1,
+        currentSearchQuery: "",
+        currentMode: "items",
+        currentType: "",
+        currentRarity: "",
+        allTypes: [],
+        allRarities: [],
+        imageCache: new Map(),
+        failedImages: new Set(),
+        isModalAnimating: false,
         
-        this.rarityMap = {
+        rarityMap: {
             "WHITE": "COMMON",
             "BLUE": "RARE",
             "GREEN": "UNCOMMON",
@@ -671,206 +690,328 @@ class FFItemsApp {
             "PURPLE": "EPIC",
             "PURPLE_PLUS": "EPIC PLUS",
             "RED": "ARTIFACT"
-        };
-        
-        this.init();
+        }
+    };
+
+    function init() {
+        setupElements();
+        setupEventDelegation();
+        fetchData();
     }
 
-    async init() {
-        this.setupEventListeners();
-        await this.fetchData();
+    function setupElements() {
+        state.grid = document.getElementById('grid');
+        state.fadeBg = document.getElementById('fadeBg');
+        state.pagePill = document.getElementById('pagePill');
+        state.searchPill = document.getElementById('searchPill');
+        state.typePill = document.getElementById('typePill');
+        state.rarityPill = document.getElementById('rarityPill');
+        state.pageSheet = document.getElementById('pageSheet');
+        state.searchSheet = document.getElementById('searchSheet');
+        state.typeSheet = document.getElementById('typeSheet');
+        state.raritySheet = document.getElementById('raritySheet');
+        state.searchInput = document.getElementById('searchInput');
+        state.pagesGrid = document.getElementById('pagesGrid');
+        state.typeGrid = document.getElementById('typeGrid');
+        state.rarityGrid = document.getElementById('rarityGrid');
+        state.searchResults = document.getElementById('searchResults');
+        state.itemsTab = document.getElementById('itemsTab');
+        state.iconsTab = document.getElementById('iconsTab');
     }
 
-    setupEventListeners() {
-        this.pagePill.addEventListener('click', () => this.openPageSheet());
-        this.searchPill.addEventListener('click', () => this.openSearchSheet());
-        this.typePill.addEventListener('click', () => this.openTypeSheet());
-        this.rarityPill.addEventListener('click', () => this.openRaritySheet());
+    function setupEventDelegation() {
+        document.addEventListener('click', handleDocumentClick);
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
         
-        this.itemsTab.addEventListener('click', () => this.switchMode('items'));
-        this.iconsTab.addEventListener('click', () => this.switchMode('icons'));
+        state.searchInput.addEventListener('input', handleSearchInput);
+        state.searchInput.addEventListener('keydown', handleSearchKeydown);
         
-        this.searchInput.addEventListener('input', (e) => {
-            this.currentPage = 1;
-            this.renderGrid(this.currentPage, e.target.value.trim(), this.currentType, this.currentRarity);
-            this.updateHeaderPills();
-        });
-        
-        this.fadeBg.addEventListener('click', () => {
-            this.closeModal();
-            this.closeAllSheets();
-        });
-        
-        document.addEventListener('touchmove', (e) => {
-            if (this.activeClone) {
-                e.preventDefault();
-            }
-        }, { passive: false });
+        state.fadeBg.addEventListener('click', handleFadeBgClick);
     }
 
-    async fetchData() {
-        try {
-            const itemsResponse = await fetch('assets/itemData.json');
-            if (!itemsResponse.ok) throw new Error('ERROR [JSON]:items');
-            this.allItems = await itemsResponse.json();
-            
-            this.allTypes = [...new Set(this.allItems.map(item => item.type).filter(Boolean))].sort();
-            this.allRarities = [...new Set(this.allItems.map(item => item.Rare).filter(Boolean))]
-                .filter(rarity => rarity !== "255" && rarity !== "NONE")
-                .sort();
-            
-            const iconsResponse = await fetch('assets/assets.json');
-            if (!iconsResponse.ok) throw new Error('ERROR [JSON]:icons');
-            const iconsData = await iconsResponse.json();
-            
-            if (Array.isArray(iconsData)) {
-                this.allIcons = iconsData;
-            } else if (typeof iconsData === 'object' && iconsData !== null) {
-                this.allIcons = Object.values(iconsData).filter(item => typeof item === 'string');
+    function handleDocumentClick(e) {
+        const target = e.target;
+        
+        if (target.classList.contains('mode-tab')) {
+            handleModeTabClick(target);
+        } else if (target.classList.contains('header-pill')) {
+            handleHeaderPillClick(target);
+        } else if (target.classList.contains('sheet-page-btn')) {
+            handlePageButtonClick(target);
+        } else if (target.classList.contains('filter-btn')) {
+            handleFilterButtonClick(target);
+        } else if (target.classList.contains('box') || target.closest('.box')) {
+            const box = target.classList.contains('box') ? target : target.closest('.box');
+            handleBoxClick(box);
+        }
+    }
+
+    function handleTouchMove(e) {
+        if (state.activeClone) {
+            e.preventDefault();
+        }
+    }
+
+    function handleSearchInput(e) {
+        state.currentPage = 1;
+        state.currentSearchQuery = e.target.value.trim();
+        renderGrid();
+        updateHeaderPills();
+    }
+
+    function handleSearchKeydown(e) {
+        if (e.key === 'Enter') {
+            closeAllSheets();
+        }
+    }
+
+    function handleFadeBgClick(e) {
+        if (e.target === state.fadeBg && !state.isModalAnimating) {
+            closeModal();
+            closeAllSheets();
+        }
+    }
+
+    function handleModeTabClick(target) {
+        const mode = target.id === 'itemsTab' ? 'items' : 'icons';
+        if (state.currentMode === mode) return;
+        
+        state.currentMode = mode;
+        state.currentPage = 1;
+        state.currentSearchQuery = "";
+        state.currentType = "";
+        state.currentRarity = "";
+        
+        state.itemsTab.classList.toggle('active', mode === 'items');
+        state.iconsTab.classList.toggle('active', mode === 'icons');
+        
+        state.searchInput.placeholder = mode === 'items' 
+            ? 'Search by name, item ID or icon...' 
+            : 'Search icons...';
+        
+        state.searchInput.value = "";
+        renderGrid();
+    }
+
+    function handleHeaderPillClick(target) {
+        if (target.id === 'pagePill') {
+            openPageSheet();
+        } else if (target.id === 'searchPill') {
+            openSearchSheet();
+        } else if (target.id === 'typePill') {
+            openTypeSheet();
+        } else if (target.id === 'rarityPill') {
+            openRaritySheet();
+        }
+    }
+
+    function handlePageButtonClick(target) {
+        const page = parseInt(target.textContent);
+        state.currentPage = page;
+        renderGrid();
+        closeAllSheets();
+    }
+
+    function handleFilterButtonClick(target) {
+        const parent = target.parentElement;
+        
+        if (parent.id === 'typeGrid') {
+            if (target.textContent === 'All Types') {
+                state.currentType = "";
             } else {
-                this.allIcons = [];
+                state.currentType = target.textContent;
             }
+        } else if (parent.id === 'rarityGrid') {
+            if (target.textContent === 'All Rarities') {
+                state.currentRarity = "";
+            } else {
+                const rarityKey = Object.keys(state.rarityMap).find(key => 
+                    state.rarityMap[key] === target.textContent
+                ) || target.textContent;
+                state.currentRarity = rarityKey;
+            }
+        }
+        
+        state.currentPage = 1;
+        renderGrid();
+        closeAllSheets();
+    }
+
+    function handleBoxClick(box) {
+        if (state.currentMode === 'items') {
+            const index = Array.from(state.grid.children).indexOf(box);
+            const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+            const actualIndex = startIndex + index;
             
-            this.filteredItems = [...this.allItems];
-            this.filteredIcons = [...this.allIcons];
-            this.totalPages = Math.ceil(this.filteredItems.length / this.itemsPerPage);
-            this.renderGrid();
-            this.updateHeaderPills();
-            this.updateSearchResultsText();
-        } catch (error) {
-            this.grid.innerHTML = '<div class="no-results">Failed to load data. Please check if JSON files exist.</div>';
+            if (actualIndex >= 0 && actualIndex < state.filteredItems.length) {
+                const item = state.filteredItems[actualIndex];
+                openModal(box, item);
+            }
+        } else {
+            const index = Array.from(state.grid.children).indexOf(box);
+            const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+            const actualIndex = startIndex + index;
+            
+            if (actualIndex >= 0 && actualIndex < state.filteredIcons.length) {
+                const iconName = state.filteredIcons[actualIndex];
+                const item = {
+                    icon: iconName,
+                    name: extractIconName(iconName)
+                };
+                openModal(box, item);
+            }
         }
     }
 
-    getImageUrl(iconName) {
-        if (iconName.includes('https://')) {
-            return iconName;
-        }
+    function fetchData() {
+        Promise.all([
+            fetch('assets/itemData.json').then(r => r.ok ? r.json() : Promise.reject()),
+            fetch('assets/assets.json').then(r => r.ok ? r.json() : Promise.reject())
+        ])
+        .then(([itemsData, iconsData]) => {
+            state.allItems = itemsData;
+            state.allIcons = Array.isArray(iconsData) ? iconsData : Object.values(iconsData).filter(item => typeof item === 'string');
+            
+            processData();
+            renderGrid();
+        })
+        .catch(error => {
+            console.error('Failed to load data:', error);
+            state.grid.innerHTML = '<div class="no-results">Failed to load data. Please check if JSON files exist.</div>';
+        });
+    }
+
+    function processData() {
+        state.allTypes = [...new Set(state.allItems.map(item => item.type).filter(Boolean))].sort();
+        state.allRarities = [...new Set(state.allItems.map(item => item.Rare).filter(Boolean))]
+            .filter(rarity => rarity !== "255" && rarity !== "NONE")
+            .sort();
+        
+        state.filteredItems = [...state.allItems];
+        state.filteredIcons = [...state.allIcons];
+        state.totalPages = Math.ceil(state.filteredItems.length / state.itemsPerPage);
+    }
+
+    function getImageUrl(iconName) {
+        if (!iconName) return 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
+        if (iconName.includes('https://')) return iconName;
         return `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
     }
 
-    createImageElement(iconName, className, altText) {
+    function createImageElement(iconName, className, altText) {
         const icon = document.createElement('img');
         icon.className = className;
-        icon.alt = altText;
+        icon.alt = altText || 'Free Fire Item';
         
-        const imageUrl = this.getImageUrl(iconName);
+        const imageUrl = getImageUrl(iconName);
         
-        if (this.failedImages.has(imageUrl)) {
+        if (state.failedImages.has(imageUrl)) {
             icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
             icon.classList.add('loaded');
             return icon;
         }
         
-        if (this.imageCache.has(imageUrl)) {
-            icon.src = this.imageCache.get(imageUrl);
+        if (state.imageCache.has(imageUrl)) {
+            icon.src = state.imageCache.get(imageUrl);
             icon.classList.add('loaded');
         } else {
-            icon.src = imageUrl;
+            icon.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PC9zdmc+';
             
-            icon.onload = () => {
+            const imgLoader = new Image();
+            imgLoader.onload = () => {
+                icon.src = imageUrl;
                 icon.classList.add('loaded');
-                this.imageCache.set(imageUrl, imageUrl);
+                state.imageCache.set(imageUrl, imageUrl);
             };
             
-            icon.onerror = () => {
-                this.failedImages.add(imageUrl);
+            imgLoader.onerror = () => {
+                state.failedImages.add(imageUrl);
                 icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
                 icon.classList.add('loaded');
             };
+            
+            imgLoader.src = imageUrl;
         }
         
         return icon;
     }
 
-    renderGrid(page = 1, query = "", type = "", rarity = "") {
-        this.grid.innerHTML = "";
+    function renderGrid() {
+        state.grid.innerHTML = "";
         
-        if (this.currentMode === "items") {
-            this.filteredItems = this.allItems.filter(item => {
-                const matchesSearch = !query || 
-                    item.name?.toLowerCase().includes(query.toLowerCase()) ||
-                    item.itemID?.toString().includes(query) ||
-                    item.icon?.toLowerCase().includes(query.toLowerCase()) ||
-                    item.description?.toLowerCase().includes(query.toLowerCase());
+        if (state.currentMode === "items") {
+            state.filteredItems = state.allItems.filter(item => {
+                const matchesSearch = !state.currentSearchQuery || 
+                    (item.name && item.name.toLowerCase().includes(state.currentSearchQuery.toLowerCase())) ||
+                    (item.itemID && item.itemID.toString().includes(state.currentSearchQuery)) ||
+                    (item.icon && item.icon.toLowerCase().includes(state.currentSearchQuery.toLowerCase())) ||
+                    (item.description && item.description.toLowerCase().includes(state.currentSearchQuery.toLowerCase()));
                 
-                const matchesType = !type || item.type === type;
-                const matchesRarity = !rarity || item.Rare === rarity;
+                const matchesType = !state.currentType || item.type === state.currentType;
+                const matchesRarity = !state.currentRarity || item.Rare === state.currentRarity;
                 
                 return matchesSearch && matchesType && matchesRarity;
             });
             
-            this.currentSearchQuery = query;
-            this.currentType = type;
-            this.currentRarity = rarity;
+            state.totalPages = Math.ceil(state.filteredItems.length / state.itemsPerPage);
             
-            this.totalPages = Math.ceil(this.filteredItems.length / this.itemsPerPage);
-            
-            if (this.filteredItems.length === 0) {
-                this.grid.innerHTML = '<div class="no-results">No items found matching your filters</div>';
-                this.updateHeaderPills();
-                this.updateSearchResultsText();
+            if (state.filteredItems.length === 0) {
+                state.grid.innerHTML = '<div class="no-results">No items found matching your filters</div>';
+                updateHeaderPills();
+                updateSearchResultsText();
                 return;
             }
             
-            const startIndex = (page - 1) * this.itemsPerPage;
-            const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredItems.length);
-            const itemsToShow = this.filteredItems.slice(startIndex, endIndex);
+            const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+            const endIndex = Math.min(startIndex + state.itemsPerPage, state.filteredItems.length);
+            const itemsToShow = state.filteredItems.slice(startIndex, endIndex);
             
             itemsToShow.forEach(item => {
                 const box = document.createElement('div');
                 box.className = 'box';
                 
-                const icon = this.createImageElement(item.icon, 'icon', item.name || 'Item Icon');
+                const icon = createImageElement(item.icon, 'icon', item.name || 'Item Icon');
                 box.appendChild(icon);
-                box.addEventListener('click', () => this.openModal(box, item));
-                this.grid.appendChild(box);
+                state.grid.appendChild(box);
             });
         } else {
-            if (query) {
-                this.filteredIcons = this.allIcons.filter(iconName => 
-                    iconName.toLowerCase().includes(query.toLowerCase())
+            if (state.currentSearchQuery) {
+                state.filteredIcons = state.allIcons.filter(iconName => 
+                    iconName && iconName.toLowerCase().includes(state.currentSearchQuery.toLowerCase())
                 );
-                this.currentSearchQuery = query;
             } else {
-                this.filteredIcons = [...this.allIcons];
-                this.currentSearchQuery = "";
+                state.filteredIcons = [...state.allIcons];
             }
             
-            this.totalPages = Math.ceil(this.filteredIcons.length / this.itemsPerPage);
+            state.totalPages = Math.ceil(state.filteredIcons.length / state.itemsPerPage);
             
-            if (this.filteredIcons.length === 0) {
-                this.grid.innerHTML = '<div class="no-results">No icons found matching your search</div>';
-                this.updateHeaderPills();
-                this.updateSearchResultsText();
+            if (state.filteredIcons.length === 0) {
+                state.grid.innerHTML = '<div class="no-results">No icons found matching your search</div>';
+                updateHeaderPills();
+                updateSearchResultsText();
                 return;
             }
             
-            const startIndex = (page - 1) * this.itemsPerPage;
-            const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredIcons.length);
-            const iconsToShow = this.filteredIcons.slice(startIndex, endIndex);
+            const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+            const endIndex = Math.min(startIndex + state.itemsPerPage, state.filteredIcons.length);
+            const iconsToShow = state.filteredIcons.slice(startIndex, endIndex);
             
             iconsToShow.forEach(iconName => {
                 const box = document.createElement('div');
                 box.className = 'box';
                 
-                const icon = this.createImageElement(iconName, 'icon', iconName);
+                const icon = createImageElement(iconName, 'icon', iconName);
                 box.appendChild(icon);
-                
-                const iconData = {
-                    icon: this.extractIconName(iconName),
-                    name: this.extractIconName(iconName)
-                };
-                
-                box.addEventListener('click', () => this.openModal(box, iconData));
-                this.grid.appendChild(box);
+                state.grid.appendChild(box);
             });
         }
         
-        this.updateSearchResultsText();
+        updateHeaderPills();
+        updateSearchResultsText();
     }
 
-    extractIconName(iconString) {
+    function extractIconName(iconString) {
+        if (!iconString) return "Unknown Icon";
         if (iconString.includes('https://')) {
             const url = new URL(iconString);
             const pathSegments = url.pathname.split('/');
@@ -880,38 +1021,40 @@ class FFItemsApp {
         return iconString;
     }
 
-    updateHeaderPills() {
-        this.pagePill.textContent = `Page ${this.currentPage}/${this.totalPages}`;
+    function updateHeaderPills() {
+        state.pagePill.textContent = `Page ${state.currentPage}/${state.totalPages}`;
         
-        if (this.currentSearchQuery) {
-            this.searchPill.textContent = this.currentSearchQuery;
+        if (state.currentSearchQuery) {
+            state.searchPill.textContent = state.currentSearchQuery.length > 10 
+                ? state.currentSearchQuery.substring(0, 10) + "..." 
+                : state.currentSearchQuery;
         } else {
-            this.searchPill.textContent = "Search";
+            state.searchPill.textContent = "Search";
         }
         
-        if (this.currentMode === "items") {
+        if (state.currentMode === "items") {
             document.querySelectorAll('.type-filter, .rarity-filter').forEach(el => {
                 el.style.display = 'block';
             });
             
-            if (this.currentType) {
-                this.typePill.textContent = this.currentType;
-                this.typePill.classList.add('active');
+            if (state.currentType) {
+                state.typePill.textContent = state.currentType;
+                state.typePill.classList.add('active');
             } else {
-                this.typePill.textContent = "Type";
-                this.typePill.classList.remove('active');
+                state.typePill.textContent = "Type";
+                state.typePill.classList.remove('active');
             }
             
-            if (this.currentRarity) {
-                let displayRarity = this.currentRarity;
-                if (this.rarityMap[this.currentRarity]) {
-                    displayRarity = this.rarityMap[this.currentRarity];
+            if (state.currentRarity) {
+                let displayRarity = state.currentRarity;
+                if (state.rarityMap[state.currentRarity]) {
+                    displayRarity = state.rarityMap[state.currentRarity];
                 }
-                this.rarityPill.textContent = displayRarity;
-                this.rarityPill.classList.add('active');
+                state.rarityPill.textContent = displayRarity;
+                state.rarityPill.classList.add('active');
             } else {
-                this.rarityPill.textContent = "Rarity";
-                this.rarityPill.classList.remove('active');
+                state.rarityPill.textContent = "Rarity";
+                state.rarityPill.classList.remove('active');
             }
         } else {
             document.querySelectorAll('.type-filter, .rarity-filter').forEach(el => {
@@ -920,285 +1063,272 @@ class FFItemsApp {
         }
     }
 
-    updateSearchResultsText() {
-        if (this.currentSearchQuery || this.currentType || this.currentRarity) {
-            const itemCount = this.currentMode === "items" ? this.filteredItems.length : this.filteredIcons.length;
+    function updateSearchResultsText() {
+        if (state.currentSearchQuery || state.currentType || state.currentRarity) {
+            const itemCount = state.currentMode === "items" ? state.filteredItems.length : state.filteredIcons.length;
             let filterText = [];
-            if (this.currentSearchQuery) filterText.push(`"${this.currentSearchQuery}"`);
-            if (this.currentType) filterText.push(`Type: ${this.currentType}`);
-            if (this.currentRarity) {
-                let displayRarity = this.currentRarity;
-                if (this.rarityMap[this.currentRarity]) {
-                    displayRarity = this.rarityMap[this.currentRarity];
+            
+            if (state.currentSearchQuery) filterText.push(`"${state.currentSearchQuery}"`);
+            if (state.currentType) filterText.push(`Type: ${state.currentType}`);
+            if (state.currentRarity) {
+                let displayRarity = state.currentRarity;
+                if (state.rarityMap[state.currentRarity]) {
+                    displayRarity = state.rarityMap[state.currentRarity];
                 }
                 filterText.push(`Rarity: ${displayRarity}`);
             }
             
-            this.searchResults.textContent = `Showing results for ${filterText.join(', ')} - ${itemCount} ${this.currentMode} found`;
+            state.searchResults.textContent = `Showing results for ${filterText.join(', ')} - ${itemCount} ${state.currentMode} found`;
         } else {
-            this.searchResults.textContent = "";
+            state.searchResults.textContent = "";
         }
     }
 
-    openTypeSheet() {
-        this.typeGrid.innerHTML = "";
+    function openTypeSheet() {
+        state.typeGrid.innerHTML = "";
         
         const allBtn = document.createElement('button');
-        allBtn.className = `filter-btn ${!this.currentType ? 'active' : ''}`;
+        allBtn.className = `filter-btn ${!state.currentType ? 'active' : ''}`;
         allBtn.textContent = 'All Types';
-        allBtn.onclick = () => {
-            this.renderGrid(1, this.currentSearchQuery, "", this.currentRarity);
-            this.updateHeaderPills();
-            this.closeAllSheets();
-        };
-        this.typeGrid.appendChild(allBtn);
+        state.typeGrid.appendChild(allBtn);
         
-        this.allTypes.forEach(type => {
+        state.allTypes.forEach(type => {
             const btn = document.createElement('button');
-            btn.className = `filter-btn ${this.currentType === type ? 'active' : ''}`;
+            btn.className = `filter-btn ${state.currentType === type ? 'active' : ''}`;
             btn.textContent = type;
-            btn.onclick = () => {
-                this.renderGrid(1, this.currentSearchQuery, type, this.currentRarity);
-                this.updateHeaderPills();
-                this.closeAllSheets();
-            };
-            this.typeGrid.appendChild(btn);
+            state.typeGrid.appendChild(btn);
         });
         
-        this.typeSheet.classList.add('active');
-        this.fadeBg.classList.add('active');
+        openSheet(state.typeSheet);
     }
 
-    openRaritySheet() {
-        this.rarityGrid.innerHTML = "";
+    function openRaritySheet() {
+        state.rarityGrid.innerHTML = "";
         
         const allBtn = document.createElement('button');
-        allBtn.className = `filter-btn ${!this.currentRarity ? 'active' : ''}`;
+        allBtn.className = `filter-btn ${!state.currentRarity ? 'active' : ''}`;
         allBtn.textContent = 'All Rarities';
-        allBtn.onclick = () => {
-            this.renderGrid(1, this.currentSearchQuery, this.currentType, "");
-            this.updateHeaderPills();
-            this.closeAllSheets();
-        };
-        this.rarityGrid.appendChild(allBtn);
+        state.rarityGrid.appendChild(allBtn);
         
-        this.allRarities.forEach(rarity => {
+        state.allRarities.forEach(rarity => {
             const btn = document.createElement('button');
-            btn.className = `filter-btn ${this.currentRarity === rarity ? 'active' : ''}`;
+            btn.className = `filter-btn ${state.currentRarity === rarity ? 'active' : ''}`;
             
             let displayName = rarity;
-            if (this.rarityMap[rarity]) {
-                displayName = this.rarityMap[rarity];
+            if (state.rarityMap[rarity]) {
+                displayName = state.rarityMap[rarity];
             }
             
             btn.textContent = displayName;
-            btn.onclick = () => {
-                this.renderGrid(1, this.currentSearchQuery, this.currentType, rarity);
-                this.updateHeaderPills();
-                this.closeAllSheets();
-            };
-            this.rarityGrid.appendChild(btn);
+            state.rarityGrid.appendChild(btn);
         });
         
-        this.raritySheet.classList.add('active');
-        this.fadeBg.classList.add('active');
+        openSheet(state.raritySheet);
     }
 
-    openPageSheet() {
-        this.pagesGrid.innerHTML = "";
+    function openPageSheet() {
+        state.pagesGrid.innerHTML = "";
         
-        for (let i = 1; i <= this.totalPages; i++) {
+        for (let i = 1; i <= state.totalPages; i++) {
             const btn = document.createElement('button');
-            btn.className = 'sheet-page-btn';
+            btn.className = `sheet-page-btn ${i === state.currentPage ? 'active' : ''}`;
             btn.textContent = i;
-            if (i === this.currentPage) btn.classList.add('active');
-            btn.onclick = () => {
-                this.currentPage = i;
-                this.renderGrid(this.currentPage, this.currentSearchQuery, this.currentType, this.currentRarity);
-                this.updateHeaderPills();
-                this.closeAllSheets();
-            };
-            this.pagesGrid.appendChild(btn);
+            state.pagesGrid.appendChild(btn);
         }
         
-        this.pageSheet.classList.add('active');
-        this.fadeBg.classList.add('active');
+        openSheet(state.pageSheet);
     }
 
-    openSearchSheet() {
-        this.searchInput.value = this.currentSearchQuery;
-        this.searchSheet.classList.add('active');
-        this.fadeBg.classList.add('active');
+    function openSearchSheet() {
+        state.searchInput.value = state.currentSearchQuery;
+        openSheet(state.searchSheet);
         
         setTimeout(() => {
-            this.searchInput.focus();
+            state.searchInput.focus();
         }, 300);
     }
 
-    closeAllSheets() {
-        this.pageSheet.classList.remove('active');
-        this.searchSheet.classList.remove('active');
-        this.typeSheet.classList.remove('active');
-        this.raritySheet.classList.remove('active');
-        this.fadeBg.classList.remove('active');
+    function openSheet(sheet) {
+        closeAllSheets();
+        sheet.classList.add('active');
+        state.fadeBg.classList.add('active');
+        document.body.style.touchAction = 'none';
     }
 
-openModal(box, item) {
-    if (this.activeClone) return;
+    function closeAllSheets() {
+        document.body.style.touchAction = '';
+        state.pageSheet.classList.remove('active');
+        state.searchSheet.classList.remove('active');
+        state.typeSheet.classList.remove('active');
+        state.raritySheet.classList.remove('active');
+        state.fadeBg.classList.remove('active');
+    }
+
+function openModal(box, item) {
+    if (state.activeClone || state.isModalAnimating) return;
+    
+    state.isModalAnimating = true;
     document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
+    
     const rect = box.getBoundingClientRect();
+    
+    state.modalContainer = document.createElement('div');
+    state.modalContainer.className = 'modal-container';
+    state.modalContainer.style.pointerEvents = 'none';
+    document.body.appendChild(state.modalContainer);
+    
     const modal = document.createElement('div');
     modal.classList.add('modal');
     modal.style.left = rect.left + 'px';
     modal.style.top = rect.top + 'px';
     modal.style.width = rect.width + 'px';
     modal.style.height = rect.height + 'px';
+    modal.style.pointerEvents = 'none';
     
-    const modalIcon = this.createImageElement(item.icon, 'modal-icon', item.name || item.icon);
+    const modalIcon = createImageElement(item.icon, 'modal-icon', item.name || item.icon);
+    modalIcon.style.pointerEvents = 'none';
     modal.appendChild(modalIcon);
     
-    document.body.appendChild(modal);
+    state.modalContainer.appendChild(modal);
     
-    this.fadeBg.addEventListener('click', () => this.closeModal());
-    
-    this.activeClone = modal;
-    this.originalBox = box;
+    state.activeClone = modal;
+    state.originalBox = box;
     
     setTimeout(() => {
-        this.fadeBg.classList.add('active');
+        state.fadeBg.classList.add('active');
+        state.modalContainer.classList.add('active');
+        
         modal.style.left = '50%';
-        modal.style.top = 'calc(50% - 100px)'; // Modal moved 100px up
+        modal.style.top = 'calc(50% - 100px)';
         modal.style.transform = 'translate(-50%, -50%) scale(1.8)';
         modal.style.width = '200px';
         modal.style.height = '200px';
         
         setTimeout(() => {
-            this.detailsCard = this.createDetailsCard(item);
-            document.body.appendChild(this.detailsCard);
+            state.detailsCard = createDetailsCard(item);
+            state.modalContainer.appendChild(state.detailsCard);
             
             const modalRect = modal.getBoundingClientRect();
             
-            this.detailsCard.style.left = modalRect.left + 'px';
-            this.detailsCard.style.top = (modalRect.bottom + 8) + 'px';
-            this.detailsCard.style.width = modalRect.width + 'px';
-            this.detailsCard.style.height = 'auto';
-            this.detailsCard.style.transform = 'none';
+            state.detailsCard.style.left = '50%';
+            state.detailsCard.style.top = (modalRect.bottom + 20) + 'px';
+            state.detailsCard.style.width = modalRect.width + 'px';
+            state.detailsCard.style.transform = 'translateX(-50%)';
             
             setTimeout(() => {
-                this.detailsCard.classList.add('active');
+                state.detailsCard.classList.add('active');
+                state.isModalAnimating = false;
             }, 50);
         }, 400);
     }, 50);
 }
 
-createDetailsCard(item) {
+
+function createDetailsCard(item) {
     const detailsCard = document.createElement('div');
     detailsCard.className = 'details-card';
     
-    if (item.name) {
-        const title = document.createElement('div');
-        title.className = 'details-title ibm-plex-mono-bold';
-        let titleText = item.name;
-        if (item.description) {
-            titleText += ` - ${item.description}`;
+    if (state.currentMode === 'icons') {
+        const iconNameTitle = document.createElement('div');
+        iconNameTitle.className = 'details-title ibm-plex-mono-bold';
+        iconNameTitle.textContent = extractIconName(item.icon);
+        detailsCard.appendChild(iconNameTitle);
+    } else {
+        if (item.name) {
+            const title = document.createElement('div');
+            title.className = 'details-title ibm-plex-mono-bold';
+            let titleText = item.name;
+            if (item.description) {
+                titleText += ` - ${item.description}`;
+            }
+            title.textContent = titleText;
+            detailsCard.appendChild(title);
         }
-        title.textContent = titleText;
-        detailsCard.appendChild(title);
+        
+        const propertiesContainer = document.createElement('div');
+        propertiesContainer.className = 'details-properties';
+        
+        if (item.itemID) {
+            const idProperty = document.createElement('div');
+            idProperty.className = 'details-property';
+            
+            const idLabel = document.createElement('span');
+            idLabel.className = 'details-property-label ibm-plex-mono-bold';
+            idLabel.textContent = 'Item ID: ';
+            
+            const idValue = document.createElement('span');
+            idValue.className = 'details-property-value ibm-plex-mono-regular';
+            idValue.textContent = item.itemID;
+            
+            idProperty.appendChild(idLabel);
+            idProperty.appendChild(idValue);
+            propertiesContainer.appendChild(idProperty);
+        }
+        
+        if (item.icon) {
+            const iconProperty = document.createElement('div');
+            iconProperty.className = 'details-property';
+            
+            const iconLabel = document.createElement('span');
+            iconLabel.className = 'details-property-label ibm-plex-mono-bold';
+            iconLabel.textContent = 'Icon: ';
+            
+            const iconValue = document.createElement('span');
+            iconValue.className = 'details-property-value ibm-plex-mono-regular';
+            iconValue.textContent = item.icon;
+            
+            iconProperty.appendChild(iconLabel);
+            iconProperty.appendChild(iconValue);
+            propertiesContainer.appendChild(iconProperty);
+        }
+        
+        detailsCard.appendChild(propertiesContainer);
     }
     
-    const propertiesContainer = document.createElement('div');
-    propertiesContainer.className = 'details-properties';
-    
-    if (item.itemID) {
-        const idProperty = document.createElement('div');
-        idProperty.className = 'details-property';
-        
-        const idLabel = document.createElement('span');
-        idLabel.className = 'details-property-label ibm-plex-mono-bold';
-        idLabel.textContent = 'Item ID: ';
-        
-        const idValue = document.createElement('span');
-        idValue.className = 'details-property-value ibm-plex-mono-regular';
-        idValue.textContent = item.itemID;
-        
-        idProperty.appendChild(idLabel);
-        idProperty.appendChild(idValue);
-        propertiesContainer.appendChild(idProperty);
-    }
-    
-    if (item.icon) {
-        const iconProperty = document.createElement('div');
-        iconProperty.className = 'details-property';
-        
-        const iconLabel = document.createElement('span');
-        iconLabel.className = 'details-property-label ibm-plex-mono-bold';
-        iconLabel.textContent = 'Icon: ';
-        
-        const iconValue = document.createElement('span');
-        iconValue.className = 'details-property-value ibm-plex-mono-regular';
-        iconValue.textContent = item.icon;
-        
-        iconProperty.appendChild(iconLabel);
-        iconProperty.appendChild(iconValue);
-        propertiesContainer.appendChild(iconProperty);
-    }
-    
-    detailsCard.appendChild(propertiesContainer);
     return detailsCard;
 }
 
-closeModal() {
-    if (!this.activeClone || !this.originalBox) return;
-    document.body.style.overflow = '';
-    document.body.style.touchAction = '';
-    
-    this.fadeBg.removeEventListener('click', this.closeModal);
-    
-    const rect = this.originalBox.getBoundingClientRect();
-    this.fadeBg.classList.remove('active');
-    
-    if (this.detailsCard) {
-        this.detailsCard.classList.remove('active');
+    function closeModal() {
+        if (!state.activeClone || !state.originalBox || state.isModalAnimating) return;
+        
+        state.isModalAnimating = true;
+        document.body.style.overflow = '';
+        
+        if (state.detailsCard) {
+            state.detailsCard.style.transform = 'translateX(-50%) translateY(20px)';
+            state.detailsCard.style.opacity = '0';
+        }
+        
+        state.fadeBg.classList.remove('active');
+        state.modalContainer.classList.remove('active');
+        
+        const rect = state.originalBox.getBoundingClientRect();
+        
+        state.activeClone.style.left = rect.left + 'px';
+        state.activeClone.style.top = rect.top + 'px';
+        state.activeClone.style.width = rect.width + 'px';
+        state.activeClone.style.height = rect.height + 'px';
+        state.activeClone.style.transform = 'translate(0,0) scale(1)';
+        
         setTimeout(() => {
-            if (this.detailsCard && this.detailsCard.parentNode) {
-                this.detailsCard.remove();
+            if (state.modalContainer && state.modalContainer.parentNode) {
+                state.modalContainer.remove();
             }
-        }, 300);
+            state.activeClone = null;
+            state.modalContainer = null;
+            state.detailsCard = null;
+            state.isModalAnimating = false;
+        }, 400);
     }
-    
-    this.activeClone.style.left = rect.left + 'px';
-    this.activeClone.style.top = rect.top + 'px';
-    this.activeClone.style.width = rect.width + 'px';
-    this.activeClone.style.height = rect.height + 'px';
-    this.activeClone.style.transform = 'translate(0,0) scale(1)';
-    
-    setTimeout(() => {
-        this.activeClone.remove();
-        this.activeClone = null;
-    }, 400);
-}
 
-    switchMode(mode) {
-        this.currentMode = mode;
-        this.currentPage = 1;
-        this.currentSearchQuery = "";
-        this.currentType = "";
-        this.currentRarity = "";
-        
-        this.itemsTab.classList.toggle('active', mode === 'items');
-        this.iconsTab.classList.toggle('active', mode === 'icons');
-        
-        this.searchInput.placeholder = mode === 'items' 
-            ? 'Search by name, item ID or icon...' 
-            : 'Search icons...';
-        
-        this.renderGrid();
-        this.updateHeaderPills();
-    }
-}
+    return {
+        init: init
+    };
+})();
 
-new FFItemsApp();
+document.addEventListener('DOMContentLoaded', function() {
+    FFItemsApp.init();
+});
 </script>
 </body>
 </html>
