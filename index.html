@@ -18,11 +18,11 @@
   <meta name="author" content="Starexx" />
   <meta property="og:url" content="https://9112000.github.io/FFItems/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <title>Starexx Items</title>
+  <title>Free Fire Items</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
-  <meta name="twitter:title" content="FFItems" />
-  <meta name="twitter:description" content="Quickly find Free Fire item IDs, names & details with Starexx Items." />
+  <meta name="twitter:title" content="FFItems - Free Fire Items Library" />
+  <meta name="twitter:description" content="Quickly find Free Fire item IDs, names & details." />
   <meta name="twitter:image" content="https://9112000.github.io/FFItems/icons/android-chrome-192x192.png" />
   <meta name="google-site-verification" content="joLKEyzfZROYT_Ck4mea3yx94rNwOqRwqalvV-xcA8U" />
   <link rel="canonical" href="https://9112000.github.io/FFItems/" />
@@ -739,12 +739,6 @@ const FFItemsApp = (function() {
     function parseURLParameters() {
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Get mode parameter
-        const modeParam = urlParams.get('mode');
-        if (modeParam && (modeParam === 'items' || modeParam === 'icons')) {
-            state.currentMode = modeParam;
-        }
-        
         // Get type parameter
         const typeParam = urlParams.get('type');
         if (typeParam) {
@@ -766,9 +760,6 @@ const FFItemsApp = (function() {
 
     function updateURLParameters() {
         const urlParams = new URLSearchParams();
-        
-        // Add mode parameter
-        urlParams.set('mode', state.currentMode);
         
         if (state.currentType) {
             urlParams.set('type', state.currentType);
@@ -1054,7 +1045,7 @@ const FFItemsApp = (function() {
             state.totalPages = Math.ceil(state.filteredIcons.length / state.itemsPerPage);
             
             if (state.filteredIcons.length === 0) {
-                state.grid.innerHTML = '<div class="no-results'>No icons found matching your search</div>';
+                state.grid.innerHTML = '<div class="no-results">No icons found matching your search</div>';
                 updateHeaderPills();
                 updateSearchResultsText();
                 return;
@@ -1076,23 +1067,6 @@ const FFItemsApp = (function() {
         
         updateHeaderPills();
         updateSearchResultsText();
-        
-        // Update UI based on current mode from URL
-        updateModeUI();
-    }
-
-    function updateModeUI() {
-        // Update tab states
-        state.itemsTab.classList.toggle('active', state.currentMode === 'items');
-        state.iconsTab.classList.toggle('active', state.currentMode === 'icons');
-        
-        // Update search placeholder
-        state.searchInput.placeholder = state.currentMode === 'items' 
-            ? 'Search by name, item ID or icon...' 
-            : 'Search icons...';
-        
-        // Update search input value
-        state.searchInput.value = state.currentSearchQuery;
     }
 
     function extractIconName(iconString) {
