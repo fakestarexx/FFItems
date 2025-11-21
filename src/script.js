@@ -309,7 +309,10 @@ const FFItemsApp = (function() {
     function getImageUrl(iconName) {
         if (!iconName) return 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
         if (iconName.includes('https://')) return iconName;
-        return `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
+        /*
+        Official → @0xMe’s Icon Resources | OB51 Icons Update
+        */
+        return `https://raw.githubusercontent.com/0xme/ff-resources/refs/heads/main/pngs/300x300/${iconName}.png`;
     }
 
     function createImageElement(iconName, className, altText) {
