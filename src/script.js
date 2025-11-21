@@ -94,19 +94,16 @@ const FFItemsApp = (function() {
     function parseURLParameters() {
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Get type parameter
         const typeParam = urlParams.get('type');
         if (typeParam) {
             state.currentType = typeParam;
         }
         
-        // Get rarity parameter
         const rarityParam = urlParams.get('rare');
         if (rarityParam) {
             state.currentRarity = rarityParam;
         }
         
-        // Get search query parameter
         const searchParam = urlParams.get('q');
         if (searchParam) {
             state.currentSearchQuery = searchParam;
@@ -129,8 +126,6 @@ const FFItemsApp = (function() {
         }
         
         const newUrl = urlParams.toString() ? `${window.location.pathname}?${urlParams.toString()}` : window.location.pathname;
-        
-        // Update URL without reloading the page
         window.history.replaceState({}, '', newUrl);
     }
 
@@ -199,7 +194,7 @@ const FFItemsApp = (function() {
         
         state.searchInput.value = "";
         renderGrid();
-        updateURLParameters(); // Update URL when mode changes
+        updateURLParameters();
     }
 
     function handleHeaderPillClick(target) {
@@ -248,7 +243,7 @@ const FFItemsApp = (function() {
         state.currentPage = 1;
         renderGrid();
         closeAllSheets();
-        updateURLParameters(); // Update URL when filters change
+        updateURLParameters();
     }
 
     function handleBoxClick(box) {
@@ -318,7 +313,7 @@ const FFItemsApp = (function() {
     function createImageElement(iconName, className, altText) {
         const icon = document.createElement('img');
         icon.className = className;
-        icon.alt = altText || 'Free Fire Item';
+        icon.alt = altText || 'Starexx';
         
         const imageUrl = getImageUrl(iconName);
         
@@ -332,7 +327,7 @@ const FFItemsApp = (function() {
             icon.src = state.imageCache.get(imageUrl);
             icon.classList.add('loaded');
         } else {
-            icon.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PC9zdmc+';
+            icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
             
             const imgLoader = new Image();
             imgLoader.onload = () => {
