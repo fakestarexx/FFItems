@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://9112000.github.io/FFItems/sitemap.xml
+Sitemap: https://realstarexx.github.io/FFItems/sitemap.xml

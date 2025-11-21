@@ -1,0 +1,191 @@
+/* Global CSS Variables and Base Styles */
+:root {
+  /* Color System */
+  --bg-primary: #000000;
+  --bg-secondary: #111111;
+  --bg-tertiary: #121212;
+  --bg-card: transparent;
+  --border-primary: #222222;
+  --border-secondary: #333333;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #888888;
+  --accent-primary: #ffffff;
+  --accent-secondary: #333;
+  --hover-primary: #181818;
+  --modal-bg: #111111;
+  --modal-border: #222222;
+
+  /* Layout Measurements */
+  --header-height: 60px;
+  --pill-radius: 20px;
+  --modal-radius: 20px;
+  --box-radius: 20px;
+
+  /* Transitions & Animations */
+  --transition-fast: 0.15s ease;
+  --transition-medium: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  --transition-modal: 0.4s cubic-bezier(.4,0,.2,1);
+  --transition-flip: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Visual Effects */
+  --shadow-modal: 0 10px 30px rgba(0,0,0,0.5);
+  --blur-backdrop: blur(4px);
+
+  /* Typography */
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  
+  /* Font Sizes */
+  --font-size-sm: 6px;
+  --font-size-md: 12px;
+  --font-size-lg: 14px;
+  --font-size-xl: 16px;
+
+  /* Spacing System */
+  --spacing-xs: 12px;
+  --spacing-sm: 8px;
+  --spacing-md: 8px;
+  --spacing-lg: 15px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 25px;
+
+  /* Icon Sizes */
+  --icon-size: 70%;
+  --modal-icon-size: 80%;
+
+  /* Layout Grid */
+  --grid-cols: 5;
+  --items-per-page: 100;
+  --max-width: 800px;
+}
+
+/* Responsive Design - Desktop */
+@media (min-width: 1024px) {
+  :root {
+    --grid-cols: 10;
+    --max-width: 1200px;
+    --icon-size: 80%;
+  }
+}
+
+/* IBM Plex Mono Font Family Classes */
+.ibm-plex-mono-thin {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.ibm-plex-mono-extralight {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.ibm-plex-mono-light {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.ibm-plex-mono-regular {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.ibm-plex-mono-medium {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.ibm-plex-mono-semibold {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.ibm-plex-mono-bold {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.ibm-plex-mono-thin-italic {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 100;
+  font-style: italic;
+}
+
+.ibm-plex-mono-extralight-italic {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 200;
+  font-style: italic;
+}
+
+.ibm-plex-mono-light-italic {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.ibm-plex-mono-regular-italic {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.ibm-plex-mono-medium-italic {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.ibm-plex-mono-semibold-italic {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.ibm-plex-mono-bold-italic {
+  font-family: "IBM Plex Mono", Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Base Reset & Global Styles */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for other browsers */
+body, .header {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

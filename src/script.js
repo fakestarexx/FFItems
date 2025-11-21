@@ -1,624 +1,744 @@
-let iconsData = [];
-let assetsData = [];
-let filteredData = [];
-let currentPage = 0;
-const itemsPerPage = 100;
-let uniqueFilters = {
-     itemType: new Set(),
-     Rare: new Set(),
-     collectionType: new Set(),
-};
-let lastClickedCard = null;
-let modalOpen = false;
-let currentSort = "";
-let currentTypeFilter = "";
-let currentCollectionFilter = "";
-let currentRarityFilter = "";
-let currentDataType = "items";
+const FFItemsApp = (function() {
+    let state = {
+        grid: null,
+        fadeBg: null,
+        pagePill: null,
+        footerPill: null,
+        searchPill: null,
+        typePill: null,
+        rarityPill: null,
+        pageSheet: null,
+        searchSheet: null,
+        typeSheet: null,
+        raritySheet: null,
+        searchInput: null,
+        pagesGrid: null,
+        typeGrid: null,
+        rarityGrid: null,
+        searchResults: null,
+        itemsTab: null,
+        iconsTab: null,
+        
+        activeClone: null,
+        originalBox: null,
+        detailsCard: null,
+        modalContainer: null,
+        currentPage: 1,
+        itemsPerPage: 100,
+        allItems: [],
+        allIcons: [],
+        filteredItems: [],
+        filteredIcons: [],
+        totalPages: 1,
+        currentSearchQuery: "",
+        currentMode: "items",
+        currentType: "",
+        currentRarity: "",
+        allTypes: [],
+        allRarities: [],
+        imageCache: new Map(),
+        failedImages: new Set(),
+        isModalAnimating: false,
+        
+        rarityMap: {
+            "WHITE": "COMMON",
+            "BLUE": "RARE",
+            "GREEN": "UNCOMMON",
+            "ORANGE": "MYTHIC",
+            "ORANGE_PLUS": "MYTHIC PLUS",
+            "PURPLE": "EPIC",
+            "PURPLE_PLUS": "EPIC PLUS",
+            "RED": "ARTIFACT"
+        }
+    };
 
-const rarityDisplayNames = {
-     NONE: "COMMON",
-     WHITE: "COMMON",
-     BLUE: "RARE",
-     GREEN: "UNCOMMON",
-     ORANGE: "MYTHIC",
-     ORANGE_PLUS: "MYTHIC PLUS",
-     PURPLE: "EPIC",
-     PURPLE_PLUS: "EPIC PLUS",
-     Red: "ARTIFACT",
-};
+    function init() {
+        setupElements();
+        setupEventDelegation();
+        // Parse URL parameters before fetching data
+        parseURLParameters();
+        fetchData();
+    }
 
-const rarityCardImages = {
-     NONE: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/COMMON.png",
-     WHITE: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/COMMON.png",
-     BLUE: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/RARE.png",
-     GREEN: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/UNCOMMON.png",
-     ORANGE: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/MYTHIC.png",
-     ORANGE_PLUS: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/MYTHIC_PLUS.png",
-     PURPLE: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/EPIC.png",
-     PURPLE_PLUS: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/EPIC_PLUS.png",
-     Red: "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/card/ARTIFACT.png",
-};
+    function setupElements() {
+        state.grid = document.getElementById('grid');
+        state.fadeBg = document.getElementById('fadeBg');
+        state.pagePill = document.getElementById('pagePill');
+        state.footerPill = document.getElementById('footerPill');
+        state.searchPill = document.getElementById('searchPill');
+        state.typePill = document.getElementById('typePill');
+        state.rarityPill = document.getElementById('rarityPill');
+        state.pageSheet = document.getElementById('pageSheet');
+        state.searchSheet = document.getElementById('searchSheet');
+        state.typeSheet = document.getElementById('typeSheet');
+        state.raritySheet = document.getElementById('raritySheet');
+        state.searchInput = document.getElementById('searchInput');
+        state.pagesGrid = document.getElementById('pagesGrid');
+        state.typeGrid = document.getElementById('typeGrid');
+        state.rarityGrid = document.getElementById('rarityGrid');
+        state.searchResults = document.getElementById('searchResults');
+        state.itemsTab = document.getElementById('itemsTab');
+        state.iconsTab = document.getElementById('iconsTab');
+    }
 
-document.addEventListener("DOMContentLoaded", () => {
-     setTimeout(() => {
-          const loadingDot = document.getElementById("loadingDot");
-          const container = document.getElementById("container");
-          if (loadingDot) loadingDot.style.display = "none";
-          if (container) container.style.display = "block";
-     }, 1000);
+    function setupEventDelegation() {
+        document.addEventListener('click', handleDocumentClick);
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        
+        state.searchInput.addEventListener('input', handleSearchInput);
+        state.searchInput.addEventListener('keydown', handleSearchKeydown);
+        
+        state.fadeBg.addEventListener('click', handleFadeBgClick);
+    }
 
-     fetchIcons();
-     fetchAssets();
+    function parseURLParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Get type parameter
+        const typeParam = urlParams.get('type');
+        if (typeParam) {
+            state.currentType = typeParam;
+        }
+        
+        // Get rarity parameter
+        const rarityParam = urlParams.get('rare');
+        if (rarityParam) {
+            state.currentRarity = rarityParam;
+        }
+        
+        // Get search query parameter
+        const searchParam = urlParams.get('q');
+        if (searchParam) {
+            state.currentSearchQuery = searchParam;
+        }
+    }
 
-     const menuButton = document.getElementById("menuButton");
-     const sidebarClose = document.getElementById("sidebarClose");
-     const search = document.getElementById("search");
-     const modalBg = document.getElementById("modalBg");
-     const modalClose = document.getElementById("modalClose");
-     const itemsButton = document.getElementById("itemsButton");
-     const assetsButton = document.getElementById("assetsButton");
+    function updateURLParameters() {
+        const urlParams = new URLSearchParams();
+        
+        if (state.currentType) {
+            urlParams.set('type', state.currentType);
+        }
+        
+        if (state.currentRarity) {
+            urlParams.set('rare', state.currentRarity);
+        }
+        
+        if (state.currentSearchQuery) {
+            urlParams.set('q', state.currentSearchQuery);
+        }
+        
+        const newUrl = urlParams.toString() ? `${window.location.pathname}?${urlParams.toString()}` : window.location.pathname;
+        
+        // Update URL without reloading the page
+        window.history.replaceState({}, '', newUrl);
+    }
 
-     if (menuButton) menuButton.addEventListener("click", toggleSidebar);
-     if (sidebarClose) sidebarClose.addEventListener("click", toggleSidebar);
-     if (search) search.addEventListener("input", filterIcons);
-     if (modalBg) modalBg.addEventListener("click", closeModal);
-     if (modalClose) modalClose.addEventListener("click", closeModal);
+    function handleDocumentClick(e) {
+        const target = e.target;
+        
+        if (target.classList.contains('mode-tab')) {
+            handleModeTabClick(target);
+        } else if (target.classList.contains('header-pill')) {
+            handleHeaderPillClick(target);
+        } else if (target.classList.contains('footer-pill')) {
+            handleFooterPillClick(target);
+        } else if (target.classList.contains('sheet-page-btn')) {
+            handlePageButtonClick(target);
+        } else if (target.classList.contains('filter-btn')) {
+            handleFilterButtonClick(target);
+        } else if (target.classList.contains('box') || target.closest('.box')) {
+            const box = target.classList.contains('box') ? target : target.closest('.box');
+            handleBoxClick(box);
+        }
+    }
 
-     if (itemsButton) itemsButton.addEventListener("click", () => switchDataType("items"));
-     if (assetsButton) assetsButton.addEventListener("click", () => switchDataType("assets"));
+    function handleTouchMove(e) {
+        if (state.activeClone) {
+            e.preventDefault();
+        }
+    }
 
-     const rarityMenu = document.getElementById("rarityMenu");
-     const sortMenu = document.getElementById("sortMenu");
-     const collectionsMenu = document.getElementById("collectionsMenu");
-     const typesMenu = document.getElementById("typesMenu");
+    function handleSearchInput(e) {
+        state.currentPage = 1;
+        state.currentSearchQuery = e.target.value.trim();
+        renderGrid();
+        updateHeaderPills();
+        updateURLParameters(); // Update URL when search changes
+    }
 
-     if (rarityMenu) rarityMenu.addEventListener("click", () => toggleSubmenu("rarity"));
-     if (sortMenu) sortMenu.addEventListener("click", () => toggleSubmenu("sort"));
-     if (collectionsMenu) collectionsMenu.addEventListener("click", () => toggleSubmenu("collections"));
-     if (typesMenu) typesMenu.addEventListener("click", () => toggleSubmenu("types"));
+    function handleSearchKeydown(e) {
+        if (e.key === 'Enter') {
+            closeAllSheets();
+        }
+    }
 
-     window.addEventListener("load", () => {
-          if ("serviceWorker" in navigator) {
-               navigator.serviceWorker.register("sw.js").then(() => {
-                    console.log("Service Worker Registered");
-               });
-          }
+    function handleFadeBgClick(e) {
+        if (e.target === state.fadeBg && !state.isModalAnimating) {
+            closeModal();
+            closeAllSheets();
+        }
+    }
 
-          let deferredPrompt;
-          window.addEventListener("beforeinstallprompt", (e) => {
-               e.preventDefault();
-               deferredPrompt = e;
-               setTimeout(() => {
-                    if (deferredPrompt) {
-                         deferredPrompt.prompt();
-                         deferredPrompt.userChoice.then(() => {
-                              deferredPrompt = null;
-                         });
-                    }
-               }, 3000);
-          });
-     });
+    function handleModeTabClick(target) {
+        const mode = target.id === 'itemsTab' ? 'items' : 'icons';
+        if (state.currentMode === mode) return;
+        
+        state.currentMode = mode;
+        state.currentPage = 1;
+        state.currentSearchQuery = "";
+        state.currentType = "";
+        state.currentRarity = "";
+        
+        state.itemsTab.classList.toggle('active', mode === 'items');
+        state.iconsTab.classList.toggle('active', mode === 'icons');
+        
+        state.searchInput.placeholder = mode === 'items' 
+            ? 'Search by name, item ID or icon...' 
+            : 'Search icons...';
+        
+        state.searchInput.value = "";
+        renderGrid();
+        updateURLParameters(); // Update URL when mode changes
+    }
+
+    function handleHeaderPillClick(target) {
+        if (target === state.searchPill) {
+            openSearchSheet();
+        } else if (target === state.typePill) {
+            openTypeSheet();
+        } else if (target === state.rarityPill) {
+            openRaritySheet();
+        }
+    }
+
+    function handleFooterPillClick(target) {
+        if (target === state.pagePill) {
+            openPageSheet();
+        }
+    }
+
+    function handlePageButtonClick(target) {
+        const page = parseInt(target.textContent);
+        state.currentPage = page;
+        renderGrid();
+        closeAllSheets();
+    }
+
+    function handleFilterButtonClick(target) {
+        const parent = target.parentElement;
+        
+        if (parent.id === 'typeGrid') {
+            if (target.textContent === 'All Types') {
+                state.currentType = "";
+            } else {
+                state.currentType = target.textContent;
+            }
+        } else if (parent.id === 'rarityGrid') {
+            if (target.textContent === 'All Rarities') {
+                state.currentRarity = "";
+            } else {
+                const rarityKey = Object.keys(state.rarityMap).find(key => 
+                    state.rarityMap[key] === target.textContent
+                ) || target.textContent;
+                state.currentRarity = rarityKey;
+            }
+        }
+        
+        state.currentPage = 1;
+        renderGrid();
+        closeAllSheets();
+        updateURLParameters(); // Update URL when filters change
+    }
+
+    function handleBoxClick(box) {
+        if (state.currentMode === 'items') {
+            const index = Array.from(state.grid.children).indexOf(box);
+            const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+            const actualIndex = startIndex + index;
+            
+            if (actualIndex >= 0 && actualIndex < state.filteredItems.length) {
+                const item = state.filteredItems[actualIndex];
+                openModal(box, item);
+            }
+        } else {
+            const index = Array.from(state.grid.children).indexOf(box);
+            const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+            const actualIndex = startIndex + index;
+            
+            if (actualIndex >= 0 && actualIndex < state.filteredIcons.length) {
+                const iconName = state.filteredIcons[actualIndex];
+                const item = {
+                    icon: iconName,
+                    name: extractIconName(iconName)
+                };
+                openModal(box, item);
+            }
+        }
+    }
+
+    function fetchData() {
+        Promise.all([
+            fetch('assets/itemData.json').then(r => r.ok ? r.json() : Promise.reject()),
+            fetch('assets/assets.json').then(r => r.ok ? r.json() : Promise.reject())
+        ])
+        .then(([itemsData, iconsData]) => {
+            state.allItems = itemsData;
+            state.allIcons = Array.isArray(iconsData) ? iconsData : Object.values(iconsData).filter(item => typeof item === 'string');
+            
+            processData();
+            renderGrid();
+        })
+        .catch(error => {
+            console.error('Failed to load data:', error);
+            state.grid.innerHTML = '<div class="no-results">Failed to load data. Please check if JSON files exist.</div>';
+        });
+    }
+
+    function processData() {
+        state.allTypes = [...new Set(state.allItems.map(item => item.type).filter(Boolean))].sort();
+        state.allRarities = [...new Set(state.allItems.map(item => item.Rare).filter(Boolean))]
+            .filter(rarity => rarity !== "255" && rarity !== "NONE")
+            .sort();
+        
+        state.filteredItems = [...state.allItems];
+        state.filteredIcons = [...state.allIcons];
+        state.totalPages = Math.ceil(state.filteredItems.length / state.itemsPerPage);
+    }
+
+    function getImageUrl(iconName) {
+        if (!iconName) return 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
+        if (iconName.includes('https://')) return iconName;
+        return `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
+    }
+
+    function createImageElement(iconName, className, altText) {
+        const icon = document.createElement('img');
+        icon.className = className;
+        icon.alt = altText || 'Free Fire Item';
+        
+        const imageUrl = getImageUrl(iconName);
+        
+        if (state.failedImages.has(imageUrl)) {
+            icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
+            icon.classList.add('loaded');
+            return icon;
+        }
+        
+        if (state.imageCache.has(imageUrl)) {
+            icon.src = state.imageCache.get(imageUrl);
+            icon.classList.add('loaded');
+        } else {
+            icon.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PC9zdmc+';
+            
+            const imgLoader = new Image();
+            imgLoader.onload = () => {
+                icon.src = imageUrl;
+                icon.classList.add('loaded');
+                state.imageCache.set(imageUrl, imageUrl);
+            };
+            
+            imgLoader.onerror = () => {
+                state.failedImages.add(imageUrl);
+                icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
+                icon.classList.add('loaded');
+            };
+            
+            imgLoader.src = imageUrl;
+        }
+        
+        return icon;
+    }
+
+    function renderGrid() {
+        state.grid.innerHTML = "";
+        
+        if (state.currentMode === "items") {
+            state.filteredItems = state.allItems.filter(item => {
+                const matchesSearch = !state.currentSearchQuery || 
+                    (item.name && item.name.toLowerCase().includes(state.currentSearchQuery.toLowerCase())) ||
+                    (item.itemID && item.itemID.toString().includes(state.currentSearchQuery)) ||
+                    (item.icon && item.icon.toLowerCase().includes(state.currentSearchQuery.toLowerCase())) ||
+                    (item.description && item.description.toLowerCase().includes(state.currentSearchQuery.toLowerCase()));
+                
+                const matchesType = !state.currentType || item.type === state.currentType;
+                const matchesRarity = !state.currentRarity || item.Rare === state.currentRarity;
+                
+                return matchesSearch && matchesType && matchesRarity;
+            });
+            
+            state.totalPages = Math.ceil(state.filteredItems.length / state.itemsPerPage);
+            
+            if (state.filteredItems.length === 0) {
+                state.grid.innerHTML = '<div class="no-results">No items found matching your filters</div>';
+                updateHeaderPills();
+                updateSearchResultsText();
+                return;
+            }
+            
+            const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+            const endIndex = Math.min(startIndex + state.itemsPerPage, state.filteredItems.length);
+            const itemsToShow = state.filteredItems.slice(startIndex, endIndex);
+            
+            itemsToShow.forEach(item => {
+                const box = document.createElement('div');
+                box.className = 'box';
+                
+                const icon = createImageElement(item.icon, 'icon', item.name || 'Item Icon');
+                box.appendChild(icon);
+                state.grid.appendChild(box);
+            });
+        } else {
+            if (state.currentSearchQuery) {
+                state.filteredIcons = state.allIcons.filter(iconName => 
+                    iconName && iconName.toLowerCase().includes(state.currentSearchQuery.toLowerCase())
+                );
+            } else {
+                state.filteredIcons = [...state.allIcons];
+            }
+            
+            state.totalPages = Math.ceil(state.filteredIcons.length / state.itemsPerPage);
+            
+            if (state.filteredIcons.length === 0) {
+                state.grid.innerHTML = '<div class="no-results">No icons found matching your search</div>';
+                updateHeaderPills();
+                updateSearchResultsText();
+                return;
+            }
+            
+            const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+            const endIndex = Math.min(startIndex + state.itemsPerPage, state.filteredIcons.length);
+            const iconsToShow = state.filteredIcons.slice(startIndex, endIndex);
+            
+            iconsToShow.forEach(iconName => {
+                const box = document.createElement('div');
+                box.className = 'box';
+                
+                const icon = createImageElement(iconName, 'icon', iconName);
+                box.appendChild(icon);
+                state.grid.appendChild(box);
+            });
+        }
+        
+        updateHeaderPills();
+        updateSearchResultsText();
+    }
+
+    function extractIconName(iconString) {
+        if (!iconString) return "Unknown Icon";
+        if (iconString.includes('https://')) {
+            const url = new URL(iconString);
+            const pathSegments = url.pathname.split('/');
+            const fileName = pathSegments[pathSegments.length - 1];
+            return fileName.replace('.png', '');
+        }
+        return iconString;
+    }
+
+    function updateHeaderPills() {
+        state.pagePill.textContent = `Page ${state.currentPage}/${state.totalPages}`;
+        
+        if (state.currentSearchQuery) {
+            state.searchPill.textContent = state.currentSearchQuery.length > 10 
+                ? state.currentSearchQuery.substring(0, 10) + "..." 
+                : state.currentSearchQuery;
+        } else {
+            state.searchPill.textContent = "Search";
+        }
+        
+        if (state.currentMode === "items") {
+            document.querySelectorAll('.type-filter, .rarity-filter').forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            if (state.currentType) {
+                state.typePill.textContent = state.currentType;
+                state.typePill.classList.add('active');
+            } else {
+                state.typePill.textContent = "Type";
+                state.typePill.classList.remove('active');
+            }
+            
+            if (state.currentRarity) {
+                let displayRarity = state.currentRarity;
+                if (state.rarityMap[state.currentRarity]) {
+                    displayRarity = state.rarityMap[state.currentRarity];
+                }
+                state.rarityPill.textContent = displayRarity;
+                state.rarityPill.classList.add('active');
+            } else {
+                state.rarityPill.textContent = "Rarity";
+                state.rarityPill.classList.remove('active');
+            }
+        } else {
+            document.querySelectorAll('.type-filter, .rarity-filter').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
+    }
+
+    function updateSearchResultsText() {
+        if (state.currentSearchQuery || state.currentType || state.currentRarity) {
+            const itemCount = state.currentMode === "items" ? state.filteredItems.length : state.filteredIcons.length;
+            let filterText = [];
+            
+            if (state.currentSearchQuery) filterText.push(`"${state.currentSearchQuery}"`);
+            if (state.currentType) filterText.push(`Type: ${state.currentType}`);
+            if (state.currentRarity) {
+                let displayRarity = state.currentRarity;
+                if (state.rarityMap[state.currentRarity]) {
+                    displayRarity = state.rarityMap[state.currentRarity];
+                }
+                filterText.push(`Rarity: ${displayRarity}`);
+            }
+            
+            state.searchResults.textContent = `Showing results for ${filterText.join(', ')} - ${itemCount} ${state.currentMode} found`;
+        } else {
+            state.searchResults.textContent = "";
+        }
+    }
+
+    function openTypeSheet() {
+        state.typeGrid.innerHTML = "";
+        
+        const allBtn = document.createElement('button');
+        allBtn.className = `filter-btn ${!state.currentType ? 'active' : ''}`;
+        allBtn.textContent = 'All Types';
+        state.typeGrid.appendChild(allBtn);
+        
+        state.allTypes.forEach(type => {
+            const btn = document.createElement('button');
+            btn.className = `filter-btn ${state.currentType === type ? 'active' : ''}`;
+            btn.textContent = type;
+            state.typeGrid.appendChild(btn);
+        });
+        
+        openSheet(state.typeSheet);
+    }
+
+    function openRaritySheet() {
+        state.rarityGrid.innerHTML = "";
+        
+        const allBtn = document.createElement('button');
+        allBtn.className = `filter-btn ${!state.currentRarity ? 'active' : ''}`;
+        allBtn.textContent = 'All Rarities';
+        state.rarityGrid.appendChild(allBtn);
+        
+        state.allRarities.forEach(rarity => {
+            const btn = document.createElement('button');
+            btn.className = `filter-btn ${state.currentRarity === rarity ? 'active' : ''}`;
+            
+            let displayName = rarity;
+            if (state.rarityMap[rarity]) {
+                displayName = state.rarityMap[rarity];
+            }
+            
+            btn.textContent = displayName;
+            state.rarityGrid.appendChild(btn);
+        });
+        
+        openSheet(state.raritySheet);
+    }
+
+    function openPageSheet() {
+        state.pagesGrid.innerHTML = "";
+        
+        for (let i = 1; i <= state.totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.className = `sheet-page-btn ${i === state.currentPage ? 'active' : ''}`;
+            btn.textContent = i;
+            state.pagesGrid.appendChild(btn);
+        }
+        
+        openSheet(state.pageSheet);
+    }
+
+    function openSearchSheet() {
+        state.searchInput.value = state.currentSearchQuery;
+        openSheet(state.searchSheet);
+        
+        setTimeout(() => {
+            state.searchInput.focus();
+        }, 300);
+    }
+
+    function openSheet(sheet) {
+        closeAllSheets();
+        sheet.classList.add('active');
+        state.fadeBg.classList.add('active');
+        document.body.style.touchAction = 'none';
+    }
+
+    function closeAllSheets() {
+        document.body.style.touchAction = '';
+        state.pageSheet.classList.remove('active');
+        state.searchSheet.classList.remove('active');
+        state.typeSheet.classList.remove('active');
+        state.raritySheet.classList.remove('active');
+        state.fadeBg.classList.remove('active');
+    }
+
+    function openModal(box, item) {
+        if (state.activeClone || state.isModalAnimating) return;
+        
+        state.isModalAnimating = true;
+        document.body.style.overflow = 'hidden';
+        
+        const rect = box.getBoundingClientRect();
+        
+        state.modalContainer = document.createElement('div');
+        state.modalContainer.className = 'modal-container';
+        state.modalContainer.style.pointerEvents = 'none';
+        document.body.appendChild(state.modalContainer);
+        
+        const modal = document.createElement('div');
+        modal.classList.add('modal');
+        modal.style.left = rect.left + 'px';
+        modal.style.top = rect.top + 'px';
+        modal.style.width = rect.width + 'px';
+        modal.style.height = rect.height + 'px';
+        modal.style.pointerEvents = 'none';
+        
+        const modalIcon = createImageElement(item.icon, 'modal-icon', item.name || item.icon);
+        modalIcon.style.pointerEvents = 'none';
+        modal.appendChild(modalIcon);
+        
+        state.modalContainer.appendChild(modal);
+        
+        state.activeClone = modal;
+        state.originalBox = box;
+        
+        setTimeout(() => {
+            state.fadeBg.classList.add('active');
+            state.modalContainer.classList.add('active');
+            
+            modal.style.left = '50%';
+            modal.style.top = 'calc(50% - 100px)';
+            modal.style.transform = 'translate(-50%, -50%) scale(1.8)';
+            modal.style.width = '200px';
+            modal.style.height = '200px';
+            
+            setTimeout(() => {
+                state.detailsCard = createDetailsCard(item);
+                state.modalContainer.appendChild(state.detailsCard);
+                
+                const modalRect = modal.getBoundingClientRect();
+                
+                state.detailsCard.style.left = '50%';
+                state.detailsCard.style.top = (modalRect.bottom + 20) + 'px';
+                state.detailsCard.style.width = modalRect.width + 'px';
+                state.detailsCard.style.transform = 'translateX(-50%)';
+                
+                setTimeout(() => {
+                    state.detailsCard.classList.add('active');
+                    state.isModalAnimating = false;
+                }, 50);
+            }, 400);
+        }, 50);
+    }
+
+    function createDetailsCard(item) {
+        const detailsCard = document.createElement('div');
+        detailsCard.className = 'details-card';
+        
+        if (state.currentMode === 'icons') {
+            const iconNameTitle = document.createElement('div');
+            iconNameTitle.className = 'details-title ibm-plex-mono-bold';
+            iconNameTitle.textContent = extractIconName(item.icon);
+            detailsCard.appendChild(iconNameTitle);
+        } else {
+            if (item.name) {
+                const title = document.createElement('div');
+                title.className = 'details-title ibm-plex-mono-bold';
+                let titleText = item.name;
+                if (item.description) {
+                    titleText += ` - ${item.description}`;
+                }
+                title.textContent = titleText;
+                detailsCard.appendChild(title);
+            }
+            
+            const propertiesContainer = document.createElement('div');
+            propertiesContainer.className = 'details-properties';
+            
+            if (item.itemID) {
+                const idProperty = document.createElement('div');
+                idProperty.className = 'details-property';
+                
+                const idLabel = document.createElement('span');
+                idLabel.className = 'details-property-label ibm-plex-mono-bold';
+                idLabel.textContent = 'Item ID: ';
+                
+                const idValue = document.createElement('span');
+                idValue.className = 'details-property-value ibm-plex-mono-regular';
+                idValue.textContent = item.itemID;
+                
+                idProperty.appendChild(idLabel);
+                idProperty.appendChild(idValue);
+                propertiesContainer.appendChild(idProperty);
+            }
+            
+            if (item.icon) {
+                const iconProperty = document.createElement('div');
+                iconProperty.className = 'details-property';
+                
+                const iconLabel = document.createElement('span');
+                iconLabel.className = 'details-property-label ibm-plex-mono-bold';
+                iconLabel.textContent = 'Icon: ';
+                
+                const iconValue = document.createElement('span');
+                iconValue.className = 'details-property-value ibm-plex-mono-regular';
+                iconValue.textContent = item.icon;
+                
+                iconProperty.appendChild(iconLabel);
+                iconProperty.appendChild(iconValue);
+                propertiesContainer.appendChild(iconProperty);
+            }
+            
+            detailsCard.appendChild(propertiesContainer);
+        }
+        
+        return detailsCard;
+    }
+
+    function closeModal() {
+        if (!state.activeClone || !state.originalBox || state.isModalAnimating) return;
+        
+        state.isModalAnimating = true;
+        document.body.style.overflow = '';
+        
+        if (state.detailsCard) {
+            state.detailsCard.style.transform = 'translateX(-50%) translateY(20px)';
+            state.detailsCard.style.opacity = '0';
+        }
+        
+        state.fadeBg.classList.remove('active');
+        state.modalContainer.classList.remove('active');
+        
+        const rect = state.originalBox.getBoundingClientRect();
+        
+        state.activeClone.style.left = rect.left + 'px';
+        state.activeClone.style.top = rect.top + 'px';
+        state.activeClone.style.width = rect.width + 'px';
+        state.activeClone.style.height = rect.height + 'px';
+        state.activeClone.style.transform = 'translate(0,0) scale(1)';
+        
+        setTimeout(() => {
+            if (state.modalContainer && state.modalContainer.parentNode) {
+                state.modalContainer.remove();
+            }
+            state.activeClone = null;
+            state.modalContainer = null;
+            state.detailsCard = null;
+            state.isModalAnimating = false;
+        }, 400);
+    }
+
+    return {
+        init: init
+    };
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+    FFItemsApp.init();
 });
-
-function toggleSubmenu(type) {
-     const menuItem = document.getElementById(`${type}Menu`);
-     const submenu = document.getElementById(`${type}Submenu`);
-     if (menuItem && submenu) {
-          menuItem.classList.toggle("active");
-          submenu.classList.toggle("open");
-     }
-}
-
-function toggleSidebar() {
-     const sidebar = document.getElementById("sidebar");
-     if (sidebar) {
-          sidebar.classList.toggle("open");
-     }
-}
-
-function switchDataType(type) {
-     currentDataType = type;
-
-     const itemsButton = document.getElementById("itemsButton");
-     const assetsButton = document.getElementById("assetsButton");
-
-     if (itemsButton && assetsButton) {
-          itemsButton.classList.toggle("active", type === "items");
-          assetsButton.classList.toggle("active", type === "assets");
-     }
-
-     applyFilters();
-}
-
-async function fetchIcons() {
-     try {
-          const response = await fetch("https://cdn.jsdelivr.net/gh/9112000/FFItems@30594bf/assets/itemData.json");
-          const data = await response.json();
-
-          iconsData = data.map((item) => ({
-               itemId: item["itemID"] || 0,
-               name: item["description"] || "Unknown",
-               iconName: item["icon"] || "Unknown",
-               description: item["description"] || "No description",
-               description2: item["description2"] || "No additional description",
-               itemType: item["itemType"] ? item["itemType"].replace(/_/g, " ") : "Unknown",
-               collectionType: item["collectionType"] ? item["collectionType"].replace(/_/g, " ") : "Unknown",
-               Rare: item["Rare"] || "NONE",
-               displayRarity: rarityDisplayNames[item["Rare"]] || item["Rare"] || "COMMON",
-               cardImageUrl: rarityCardImages[item["Rare"]] || "assets/images/card/COMMON.png",
-               iconUrl: `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${item["icon"]}.png`,
-               dataType: "item",
-          }));
-
-          iconsData.forEach((item) => {
-               if (item.itemType && item.itemType !== "Unknown") uniqueFilters.itemType.add(item.itemType);
-               if (item.displayRarity && item.displayRarity !== "COMMON") uniqueFilters.Rare.add(item.displayRarity);
-               if (item.collectionType && item.collectionType !== "Unknown") uniqueFilters.collectionType.add(item.collectionType);
-          });
-
-          populateFilterButtons("filter-Rare-buttons", uniqueFilters.Rare, "Rare");
-          populateFilterButtons("filter-sort-buttons", new Set(["ID", "Name", "Rarity"]), "sort");
-          populateFilterButtons("filter-collectionType-buttons", uniqueFilters.collectionType, "collectionType");
-          populateFilterButtons("filter-itemType-buttons", uniqueFilters.itemType, "itemType");
-
-          populateFilterTabs();
-
-          filteredData = [...iconsData];
-          sortIcons();
-          renderIcons();
-
-          const searchParams = new URLSearchParams(window.location.search);
-          const query = searchParams.get("q");
-          if (query) {
-               const searchInput = document.getElementById("search");
-               if (searchInput) {
-                    searchInput.value = query;
-                    filterIcons();
-               }
-          }
-     } catch (error) {
-          console.error("Failed to retrieve Icons:", error);
-          showError();
-     }
-}
-
-async function fetchAssets() {
-     try {
-          const response = await fetch("assets/assets.json");
-          const data = await response.json();
-
-          assetsData = data.map((url) => ({
-               iconUrl: url,
-               name: url.split("/").pop().replace(".png", ""),
-               dataType: "asset",
-          }));
-     } catch (error) {
-          console.error("Failed to retrieve Assets:", error);
-     }
-}
-
-function populateFilterButtons(containerId, values, filterType) {
-     const container = document.getElementById(containerId);
-     if (!container) return;
-
-     container.innerHTML = "";
-
-     Array.from(values)
-          .sort()
-          .forEach((value) => {
-               if (!value) return;
-
-               const button = document.createElement("button");
-               button.className = "sidebar-filter-button";
-               button.textContent = value;
-               button.dataset.filterType = filterType;
-               button.dataset.filterValue = value;
-
-               button.onclick = function () {
-                    const buttons = container.querySelectorAll(".sidebar-filter-button");
-                    buttons.forEach((btn) => btn.classList.remove("active"));
-
-                    if (filterType === "sort") {
-                         button.classList.add("active");
-                         currentSort = value.toLowerCase();
-                         sortIcons();
-                         renderIcons();
-                    } else {
-                         const isActive = button.classList.contains("active");
-                         buttons.forEach((btn) => btn.classList.remove("active"));
-
-                         if (!isActive) {
-                              button.classList.add("active");
-
-                              if (filterType === "Rare") {
-                                   currentRarityFilter = value;
-                              } else if (filterType === "collectionType") {
-                                   currentCollectionFilter = value;
-                              } else if (filterType === "itemType") {
-                                   currentTypeFilter = value;
-                              }
-                         } else {
-                              if (filterType === "Rare") {
-                                   currentRarityFilter = "";
-                              } else if (filterType === "collectionType") {
-                                   currentCollectionFilter = "";
-                              } else if (filterType === "itemType") {
-                                   currentTypeFilter = "";
-                              }
-                         }
-
-                         applyFilters();
-                    }
-               };
-
-               if (filterType === "sort" && value.toLowerCase() === currentSort) {
-                    button.classList.add("active");
-               }
-
-               container.appendChild(button);
-          });
-}
-
-function populateFilterTabs() {
-     const filterTabs = document.getElementById("headerTabs");
-     if (!filterTabs) return;
-
-     filterTabs.innerHTML = "";
-
-     const allTab = document.createElement("button");
-     allTab.className = "filter-tab active";
-     allTab.textContent = "ALL";
-     allTab.onclick = () => {
-          currentTypeFilter = "";
-          currentCollectionFilter = "";
-          currentRarityFilter = "";
-
-          document.querySelectorAll(".filter-tab").forEach((tab) => tab.classList.remove("active"));
-          allTab.classList.add("active");
-
-          document.querySelectorAll(".sidebar-filter-button").forEach((btn) => {
-               if (btn.dataset.filterType !== "sort") {
-                    btn.classList.remove("active");
-               }
-          });
-
-          applyFilters();
-     };
-     filterTabs.appendChild(allTab);
-
-     Array.from(uniqueFilters.itemType)
-          .sort()
-          .forEach((type) => {
-               if (!type) return;
-               const tab = document.createElement("button");
-               tab.className = "filter-tab";
-               tab.textContent = type;
-               tab.onclick = () => {
-                    currentTypeFilter = type;
-                    currentCollectionFilter = "";
-                    currentRarityFilter = "";
-
-                    document.querySelectorAll(".filter-tab").forEach((t) => t.classList.remove("active"));
-                    tab.classList.add("active");
-
-                    document.querySelectorAll(".sidebar-filter-button").forEach((btn) => {
-                         if (btn.dataset.filterType !== "sort") {
-                              btn.classList.remove("active");
-                         }
-                    });
-
-                    const typeButton = document.querySelector(`.sidebar-filter-button[data-filter-value="${type}"]`);
-                    if (typeButton) typeButton.classList.add("active");
-
-                    applyFilters();
-               };
-               filterTabs.appendChild(tab);
-          });
-
-     Array.from(uniqueFilters.collectionType)
-          .sort()
-          .forEach((collection) => {
-               if (!collection) return;
-               const tab = document.createElement("button");
-               tab.className = "filter-tab";
-               tab.textContent = collection;
-               tab.onclick = () => {
-                    currentCollectionFilter = collection;
-                    currentTypeFilter = "";
-                    currentRarityFilter = "";
-
-                    document.querySelectorAll(".filter-tab").forEach((t) => t.classList.remove("active"));
-                    tab.classList.add("active");
-
-                    document.querySelectorAll(".sidebar-filter-button").forEach((btn) => {
-                         if (btn.dataset.filterType !== "sort") {
-                              btn.classList.remove("active");
-                         }
-                    });
-
-                    const collectionButton = document.querySelector(`.sidebar-filter-button[data-filter-value="${collection}"]`);
-                    if (collectionButton) collectionButton.classList.add("active");
-
-                    applyFilters();
-               };
-               filterTabs.appendChild(tab);
-          });
-}
-
-function showError() {
-     const grid = document.getElementById("iconGrid");
-     if (grid) {
-          grid.innerHTML = `<div class="no-results">Failed to load items. Please try again later.</div>`;
-     }
-}
-
-function applyFilters() {
-     const searchInput = document.getElementById("search");
-     const searchQuery = searchInput ? searchInput.value.toLowerCase() : "";
-
-     if (currentDataType === "items") {
-          filteredData = iconsData.filter((item) => {
-               const itemName = item.name || "";
-               const itemId = item.itemId || "";
-               const iconName = item.iconName || "";
-
-               const matchesSearch = searchQuery === "" || itemName.toString().toLowerCase().includes(searchQuery) || itemId.toString().includes(searchQuery) || iconName.toLowerCase().includes(searchQuery);
-
-               const matchesType = !currentTypeFilter || item.itemType === currentTypeFilter;
-               const matchesRare = !currentRarityFilter || item.displayRarity === currentRarityFilter;
-               const matchesCollection = !currentCollectionFilter || item.collectionType === currentCollectionFilter;
-
-               return matchesSearch && matchesType && matchesRare && matchesCollection;
-          });
-
-          sortIcons();
-     } else {
-          filteredData = assetsData.filter((asset) => {
-               const assetName = asset.name || "";
-               return searchQuery === "" || assetName.toLowerCase().includes(searchQuery);
-          });
-     }
-
-     currentPage = 0;
-     renderIcons();
-}
-
-function sortIcons() {
-     if (currentSort === "name") {
-          filteredData.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-     } else if (currentSort === "id") {
-          filteredData.sort((a, b) => (a.itemId || 0) - (b.itemId || 0));
-     } else if (currentSort === "rarity") {
-          const rarityOrder = {
-               COMMON: 1,
-               UNCOMMON: 2,
-               RARE: 3,
-               EPIC: 4,
-               "EPIC PLUS": 5,
-               MYTHIC: 6,
-               "MYTHIC PLUS": 7,
-               ARTIFACT: 8,
-          };
-
-          filteredData.sort((a, b) => {
-               const aRarity = rarityOrder[a.displayRarity] || 0;
-               const bRarity = rarityOrder[b.displayRarity] || 0;
-               return bRarity - aRarity || (a.itemId || 0) - (b.itemId || 0);
-          });
-     }
-}
-
-function renderIcons() {
-     const grid = document.getElementById("iconGrid");
-     if (!grid) return;
-
-     const start = currentPage * itemsPerPage;
-     const end = start + itemsPerPage;
-     const visibleIcons = filteredData.slice(start, end);
-
-     grid.innerHTML = "";
-
-     if (filteredData.length === 0) {
-          grid.innerHTML = `<div class="no-results">No items found matching your criteria</div>`;
-          const paginationDiv = document.getElementById("pagination");
-          if (paginationDiv) paginationDiv.innerHTML = "";
-          return;
-     }
-
-     visibleIcons.forEach((icon, index) => {
-          const card = document.createElement("div");
-          card.className = "icon-card";
-          card.dataset.index = start + index;
-          card.onclick = (e) => {
-               document.querySelectorAll(".icon-card").forEach((c) => {
-                    c.classList.remove("active");
-               });
-               card.classList.add("active");
-               lastClickedCard = card;
-               showModal(icon);
-          };
-
-          const cardContainer = document.createElement("div");
-          cardContainer.style.position = "relative";
-          cardContainer.style.width = "100%";
-          cardContainer.style.height = "100%";
-
-          if (currentDataType === "items") {
-               const cardBg = document.createElement("img");
-               cardBg.src = icon.cardImageUrl;
-               cardBg.alt = icon.name + " card background";
-               cardBg.className = "card-bg";
-               cardBg.onerror = () => {
-                    cardBg.src = "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png";
-               };
-
-               const cardIcon = document.createElement("img");
-               cardIcon.src = icon.iconUrl;
-               cardIcon.alt = icon.name;
-               cardIcon.className = "card-icon";
-               cardIcon.onerror = () => {
-                    cardIcon.src = "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png";
-               };
-
-               cardContainer.appendChild(cardBg);
-               cardContainer.appendChild(cardIcon);
-          } else {
-               const cardIcon = document.createElement("img");
-               cardIcon.src = icon.iconUrl;
-               cardIcon.alt = icon.name;
-               cardIcon.className = "card-icon";
-               cardIcon.style.position = "absolute";
-               cardIcon.style.top = "50%";
-               cardIcon.style.left = "50%";
-               cardIcon.style.transform = "translate(-50%, -50%)";
-               cardIcon.style.maxWidth = "80%";
-               cardIcon.style.maxHeight = "80%";
-               cardIcon.onerror = () => {
-                    cardIcon.src = "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png";
-               };
-
-               cardContainer.appendChild(cardIcon);
-          }
-
-          card.appendChild(cardContainer);
-          grid.appendChild(card);
-     });
-
-     updatePagination();
-}
-
-function updatePagination() {
-     const paginationDiv = document.getElementById("pagination");
-     if (!paginationDiv) return;
-
-     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-     paginationDiv.innerHTML = "";
-
-     for (let i = 0; i < totalPages; i++) {
-          const button = document.createElement("button");
-          button.textContent = i + 1;
-          button.classList.toggle("active", i === currentPage);
-          button.onclick = () => changePage(i);
-          paginationDiv.appendChild(button);
-     }
-}
-
-function changePage(page) {
-     currentPage = page;
-     renderIcons();
-     window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function filterIcons() {
-     applyFilters();
-}
-
-function showModal(item) {
-     const modal = document.getElementById("modal");
-     const modalImage = document.getElementById("modalImage");
-     const modalDescription = document.getElementById("modalDescription");
-     const modalDescription2 = document.getElementById("modalDescription2");
-     const modalItemId = document.getElementById("modalItemId");
-     const modalIconName = document.getElementById("modalIconName");
-     const modalType = document.getElementById("modalType");
-     const modalRare = document.getElementById("modalRare");
-
-     if (modal && modalImage) {
-          modalImage.src = item.iconUrl;
-          modalImage.onerror = () => {
-               modalImage.src = "https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png";
-          };
-
-          if (item.dataType === "item") {
-               if (modalDescription) modalDescription.textContent = item.name || "Unknown";
-               if (modalDescription2) {
-                    const description = item.description2 || item.description || "No description";
-                    modalDescription2.textContent = description === "No description" || description === "NONE" ? "No description provided" : description;
-               }
-               if (modalItemId) modalItemId.textContent = item.itemId || "Unknown";
-               if (modalIconName) modalIconName.textContent = item.iconName || "Unknown";
-               if (modalType) modalType.textContent = item.itemType || "Unknown";
-               if (modalRare) modalRare.textContent = item.displayRarity || "Unknown";
-               document.querySelectorAll("#modalDescription2, #modalItemId, #modalType, #modalRare").forEach((el) => {
-                    el.style.display = "";
-               });
-               document.querySelectorAll(".divider").forEach((el) => {
-                    el.style.display = "";
-               });
-          } else {
-               if (modalDescription) modalDescription.textContent = "";
-               if (modalDescription2) modalDescription2.textContent = "";
-               if (modalItemId) modalItemId.textContent = "Unavailable in assets mode.";
-               if (modalIconName) modalIconName.textContent = item.name || "Unknown";
-               if (modalType) modalType.textContent = "";
-               if (modalRare) modalRare.textContent = "";
-
-               document.querySelectorAll("#modalDescription2, #item.description, #modalType, #modalRare").forEach((el) => {
-                    el.style.display = "none";
-               });
-               document.querySelectorAll(".divider").forEach((el) => {
-                    el.style.display = "none";
-               });
-          }
-
-          modal.classList.add("show");
-     }
-}
-
-function closeModal() {
-     const modal = document.getElementById("modal");
-     if (modal) {
-          modal.classList.remove("show");
-     }
-}
-
-function copyToClipboard(text, type) {
-     if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard
-               .writeText(text)
-               .then(() => {
-                    showCopyNotification(type);
-               })
-               .catch((err) => {
-                    console.error("Failed to copy: ", err);
-                    fallbackCopyToClipboard(text, type);
-               });
-     } else {
-          fallbackCopyToClipboard(text, type);
-     }
-}
-
-function fallbackCopyToClipboard(text, type) {
-     const textArea = document.createElement("textarea");
-     textArea.value = text;
-     textArea.style.position = "fixed";
-     textArea.style.opacity = 0;
-     document.body.appendChild(textArea);
-     textArea.focus();
-     textArea.select();
-
-     try {
-          const successful = document.execCommand("copy");
-          if (successful) {
-               showCopyNotification(type);
-          }
-     } catch (err) {
-          console.error("Fallback copy failed: ", err);
-     }
-
-     document.body.removeChild(textArea);
-}
-
-function showCopyNotification(type) {
-     alert(`${type} copied to clipboard!`);
-}
-
-if ("serviceWorker" in navigator) {
-     window.addEventListener("load", () => {
-          navigator.serviceWorker
-               .register("sw.js")
-               .then((reg) => console.log("Service worker registered", reg))
-               .catch((err) => console.error("Service worker registration failed", err));
-     });
-}
