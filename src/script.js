@@ -302,23 +302,20 @@ const FFItemsApp = (function() {
     }
 
     function getImageUrl(iconName) {
-        if (!iconName) return 'https://cdn.jsdelivr.net/gh/9112000/FFItems@5e8cc4727d5e19ed975aed50497167bf9228fea4/assets/images/error-404.png';
+        if (!iconName) return 'htt#ps://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
         if (iconName.includes('https://')) return iconName;
-        /*
-        Official → @0xMe’s Icon Resources | OB51 Icons Update
-        */
         return `https://raw.githubusercontent.com/0xme/ff-resources/refs/heads/main/pngs/300x300/${iconName}.png`;
     }
 
     function createImageElement(iconName, className, altText) {
         const icon = document.createElement('img');
         icon.className = className;
-        icon.alt = altText || 'Starexx';
+        icon.alt = altText || 'Free Fire Item';
         
         const imageUrl = getImageUrl(iconName);
         
         if (state.failedImages.has(imageUrl)) {
-            icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@5e8cc4727d5e19ed975aed50497167bf9228fea4/assets/images/error-404.png';
+            icon.src = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
             icon.classList.add('loaded');
             return icon;
         }
@@ -327,7 +324,7 @@ const FFItemsApp = (function() {
             icon.src = state.imageCache.get(imageUrl);
             icon.classList.add('loaded');
         } else {
-            icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@5e8cc4727d5e19ed975aed50497167bf9228fea4/assets/images/error-404.png';
+            icon.src = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
             
             const imgLoader = new Image();
             imgLoader.onload = () => {
@@ -338,7 +335,7 @@ const FFItemsApp = (function() {
             
             imgLoader.onerror = () => {
                 state.failedImages.add(imageUrl);
-                icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@5e8cc4727d5e19ed975aed50497167bf9228fea4/assets/images/error-404.png';
+                icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
                 icon.classList.add('loaded');
             };
             
