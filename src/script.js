@@ -1,4 +1,4 @@
-const FFItemsApp = (function() {
+const Logic = (function() {
     let state = {
         grid: null,
         fadeBg: null,
@@ -308,41 +308,60 @@ const FFItemsApp = (function() {
     }
 
     function createImageElement(iconName, className, altText) {
-        const icon = document.createElement('img');
-        icon.className = className;
-        icon.alt = altText || 'Free Fire Item';
-        
-        const imageUrl = getImageUrl(iconName);
-        
-        if (state.failedImages.has(imageUrl)) {
-            icon.src = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
-            icon.classList.add('loaded');
-            return icon;
-        }
-        
-        if (state.imageCache.has(imageUrl)) {
-            icon.src = state.imageCache.get(imageUrl);
-            icon.classList.add('loaded');
-        } else {
-            icon.src = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
-            
-            const imgLoader = new Image();
-            imgLoader.onload = () => {
-                icon.src = imageUrl;
-                icon.classList.add('loaded');
-                state.imageCache.set(imageUrl, imageUrl);
-            };
-            
-            imgLoader.onerror = () => {
-                state.failedImages.add(imageUrl);
-                icon.src = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@master/assets/images/error-404.png';
-                icon.classList.add('loaded');
-            };
-            
-            imgLoader.src = imageUrl;
-        }
-        
+    const icon = document.createElement('img');
+    icon.className = className;
+    icon.alt = altText || 'Free Fire Item';
+    
+    const imageUrl = getImageUrl(iconName);
+    
+    if (state.failedImages.has(imageUrl)) {
+        icon.src = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
+        icon.classList.add('loaded');
         return icon;
+    }
+    
+    if (state.imageCache.has(imageUrl)) {
+        icon.src = state.imageCache.get(imageUrl);
+        icon.classList.add('loaded');
+    } else {
+        const githubUrl = `https://raw.githubusercontent.com/0xme/ff-resources/refs/heads/main/pngs/300x300/${iconName}.png`;
+        const freefireUrl = `https://freefiremobile-a.akamaihd.net/common/Local/PK/FF_UI_Icon/${iconName}.png`;
+        const errorUrl = 'https://cdn.jsdelivr.net/gh/9112000/FFItems@5e8cc4727d5e19ed975aed50497167bf9228fea4/assets/images/error-404.png';
+        
+        icon.src = githubUrl;
+        
+        const imgLoader = new Image();
+        
+        imgLoader.onload = () => {
+            icon.src = githubUrl;
+            icon.classList.add('loaded');
+            state.imageCache.set(imageUrl, githubUrl);
+        };
+        
+        imgLoader.onerror = () => {
+            state.failedImages.add(githubUrl);
+            
+            const fallbackLoader = new Image();
+            
+            fallbackLoader.onload = () => {
+                icon.src = freefireUrl;
+                icon.classList.add('loaded');
+                state.imageCache.set(imageUrl, freefireUrl);
+            };
+            
+            fallbackLoader.onerror = () => {
+                icon.src = errorUrl;
+                icon.classList.add('loaded');
+                state.imageCache.set(imageUrl, errorUrl);
+            };
+            
+            fallbackLoader.src = freefireUrl;
+        };
+        
+        imgLoader.src = githubUrl;
+    }
+    
+    return icon;
     }
 
     function renderGrid() {
@@ -735,5 +754,5 @@ const FFItemsApp = (function() {
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
-    FFItemsApp.init();
+    Logic.init();
 });
