@@ -55,7 +55,6 @@ const Logic = (function() {
     function init() {
         setupElements();
         setupEventDelegation();
-        // Parse URL parameters before fetching data
         parseURLParameters();
         fetchData();
     }
