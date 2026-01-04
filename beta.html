@@ -160,15 +160,23 @@ body, .header {
   display: flex;
   justify-content: left;
   align-items: center;
-  background: var(--bg-primary);
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: 8px 20px;
   z-index: 51;
-  height: var(--header-height);
-  gap: var(--spacing-md);
+  height: 60px;
+  gap: 8px;
   flex-wrap: nowrap;
   overflow-x: auto;
   white-space: nowrap;
   max-width: 100%;
+  border-radius: 40px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.8) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  backdrop-filter: blur(0.5px);
+  -webkit-backdrop-filter: blur(0.5px);
 }
 .main-content {
   margin-top: 50px;
@@ -218,7 +226,10 @@ body, .header {
   cursor: pointer;
   transition: transform var(--transition-fast), background var(--transition-medium);
   user-select: none;
-  border: 1px solid var(--border-primary);
+  border-top: 1.2px solid var(--border-primary);
+  border-left: 1.2px solid var(--border-primary);
+  border-right: 0.8px solid var(--border-primary);
+  border-bottom: 0.8px solid var(--border-primary);
   overflow: hidden;
 }
 .icon {
@@ -234,9 +245,14 @@ body, .header {
   opacity: 1;
 }
 .header-pill {
-  background: var(--bg-tertiary);
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--text-primary);
   border: none;
+  border-left: 1px solid #222;
+  border-right: 1px solid #222;
+  border-bottom: 0.1px solid #222;
   border-radius: var(--pill-radius);
   padding: var(--spacing-sm) var(--spacing-lg);
   cursor: pointer;
@@ -308,7 +324,10 @@ body, .header {
   transition: all var(--transition-modal);
   overflow: hidden;
   box-shadow: var(--shadow-modal);
-  border: 1px solid var(--modal-border);
+  border-top: 1px solid var(--border-primary);
+  border-left: 1px solid var(--border-primary);
+  border-right: 0.8px solid var(--border-primary);
+  border-bottom: 0.8px solid var(--border-primary);
 }
 .modal-icon {
   width: var(--modal-icon-size);
@@ -363,7 +382,10 @@ body, .header {
   background: var(--modal-bg);
   border-radius: var(--modal-radius);
   box-shadow: var(--shadow-modal);
-  border: 1px solid var(--modal-border);
+  border-top: 1.5px solid var(--modal-border);
+  border-left: 0.8px solid var(--modal-border);
+  border-bottom: 0.9px solid var(--modal-border);
+  border-right: 0.8px solid var(--modal-border);
   padding: 15px;
   z-index: 101;
   display: flex;
@@ -382,16 +404,21 @@ body, .header {
 }
 .search-textarea {
   width: 100%;
-  min-height: 20px;
-  max-height: 32px;
+  min-height: 32px;
+  max-height: 20px;
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: 20px;
   border: none;
-  background: var(--bg-tertiary);
+  border-left: 1.2px solid #222;
+  border-right: 0.8px solid #222;
+  border-bottom: 0.1px solid #222;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
   color: var(--text-primary);
   font-family: inherit;
   outline: none;
-  font-size: var(--font-size-md);
+  font-size: 14px;
   font-weight: 500;
   resize: none;
   overflow-y: auto;
@@ -481,11 +508,9 @@ body, .header {
 .modal-icon.loaded {
   opacity: 1;
 }
-.header-pill:hover {
-  background: var(--hover-primary);
-}
 .header-pill:active {
   transform: scale(0.9);
+  background: var(--hover-primary);
 }
 .mode-tab:active {
   transform: scale(0.9);
@@ -501,10 +526,8 @@ body, .header {
   transform: scale(0.9);
 }
 .modal-icon:active {
-  transform: scale(0.9);
-}
-.sheet-page-btn:hover {
   background: var(--hover-primary);
+  transform: scale(0.9);
 }
 </style>
   <body>
