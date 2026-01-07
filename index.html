@@ -1522,6 +1522,7 @@ body.dropdown-open {
                 Promise.all([
                                 fetch(
                                         'src/assets/itemData.json'
+                
                                 )
                                 .then(r =>
                                         r
@@ -1532,7 +1533,7 @@ body.dropdown-open {
                                         .reject()
                                 ),
                                 fetch(
-                                        'src/assets/assets.json'
+                                        'assets/assets.json'
                                 )
                                 .then(r =>
                                         r
