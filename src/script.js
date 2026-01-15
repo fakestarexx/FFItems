@@ -1,145 +1,83 @@
-const Logic = (function() {
-  let state = {
-    grid: null,
-    fadeBg: null,
-    pagePill: null,
-    footerPill: null,
-    filterDropdown: null,
-    dropdownMenu: null,
-    pageSheet: null,
-    searchSheet: null,
-    searchTextarea: null,
-    pagesGrid: null,
-    searchResults: null,
-    modeTab: null,
-    activeClone: null,
-    originalBox: null,
-    detailsCard: null,
-    modalContainer: null,
-    currentPage: 1,
-    itemsPerPage: 100,
-    allItems: [],
-    allIcons: [],
-    filteredItems: [],
-    filteredIcons: [],
-    totalPages: 1,
-    currentSearchQuery: "",
-    currentMode: "items",
-    currentType: "",
-    currentRarity: "",
-    allTypes: [],
-    allRarities: [],
-    imageCache: new Map,
-    failedImages: new Set,
-    isModalAnimating: false,
-    isDropdownOpen: false,
-    rarityMap: {
-      "WHITE": "Common",
-      "BLUE": "Rare",
-      "GREEN": "Uncommon",
-      "ORANGE": "Mythic",
-      "ORANGE_PLUS": "Mythic+",
-      "PURPLE": "Epic",
-      "PURPLE_PLUS": "Epic+",
-      "RED": "Artifact",
-      "NONE": "None"
-    }
-  };
-
-  function init() {
-    setupElements();
-    setupEventDelegation();
-    parseURLParameters();
-    fetchData();
-    createDropdownMenu();
-  }
-
+const require = (function() {let def={grid:null,fadeBg:null,pagePill:null,footerPill:null,filterDropdown:null,dropdownMenu:null,pageSheet:null,searchSheet:null,searchTextarea:null,pagesGrid:null,searchResults:null,modeTab:null,activeClone:null,originalBox:null,detailsCard:null,modalContainer:null,currentPage:1,itemsPerPage:100,allItems:[],allIcons:[],filteredItems:[],filteredIcons:[],totalPages:1,currentSearchQuery:"",currentMode:"items",currentType:"",currentRarity:"",allTypes:[],allRarities:[],imageCache:new Map,failedImages:new Set,isModalAnimating:false,isDropdownOpen:false,rarityMap:{WHITE:"Common",BLUE:"Rare",GREEN:"Uncommon",ORANGE:"Mythic",ORANGE_PLUS:"Mythic+",PURPLE:"Epic",PURPLE_PLUS:"Epic+",RED:"Artifact",NONE:"None"}};
+  function init() { setupElements(); setupEventDelegation(); parseURLParameters(); fetchData(); createDropdownMenu();  }
   function setupElements() {
-    state.grid = document.getElementById('grid');
-    state.fadeBg = document.getElementById('fadeBg');
-    state.pagePill = document.getElementById('pagePill');
-    state.filterDropdown = document.getElementById('filterDropdown');
-    state.pageSheet = document.getElementById('pageSheet');
-    state.searchSheet = document.getElementById('searchSheet');
-    state.searchTextarea = document.getElementById('searchTextarea');
-    state.pagesGrid = document.getElementById('pagesGrid');
-    state.searchResults = document.getElementById('searchResults');
-    state.modeTab = document.getElementById('modeTab');
+    def.grid = document.getElementById('grid');
+    def.fadeBg = document.getElementById('fadeBg');
+    def.pagePill = document.getElementById('pagePill');
+    def.filterDropdown = document.getElementById('filterDropdown');
+    def.pageSheet = document.getElementById('pageSheet');
+    def.searchSheet = document.getElementById('searchSheet');
+    def.searchTextarea = document.getElementById('searchTextarea');
+    def.pagesGrid = document.getElementById('pagesGrid');
+    def.searchResults = document.getElementById('searchResults');
+    def.modeTab = document.getElementById('modeTab');
   }
-
   function createDropdownMenu() {
-    state.dropdownMenu = document.createElement('div');
-    state.dropdownMenu.className = 'dropdown-menu';
-    state.dropdownMenu.id = 'dropdownMenu';
-    document.body.appendChild(state.dropdownMenu);
+    def.dropdownMenu = document.createElement('div');
+    def.dropdownMenu.className = 'dropdown-menu';
+    def.dropdownMenu.id = 'dropdownMenu';
+    document.body.appendChild(def.dropdownMenu);
   }
-
   function setupEventDelegation() {
     document.addEventListener('click', handleDocumentClick);
     document.addEventListener('touchmove', handleTouchMove, {
       passive: false
     });
-    state.searchTextarea.addEventListener('input', handleSearchInput);
-    state.searchTextarea.addEventListener('keydown', handleSearchKeydown);
-    state.fadeBg.addEventListener('click', handleFadeBgClick);
-    state.modeTab.addEventListener('click', handleModeTabClick);
-    state.filterDropdown.addEventListener('click', handleFilterDropdownClick);
+    def.searchTextarea.addEventListener('input', handleSearchInput);
+    def.searchTextarea.addEventListener('keydown', handleSearchKeydown);
+    def.fadeBg.addEventListener('click', handleFadeBgClick);
+    def.modeTab.addEventListener('click', handleModeTabClick);
+    def.filterDropdown.addEventListener('click', handleFilterDropdownClick);
     document.addEventListener('click', function(event) {
-      if (state.isDropdownOpen && !state.filterDropdown.contains(event.target) && !state.dropdownMenu
+      if (def.isDropdownOpen && !def.filterDropdown.contains(event.target) && !def.dropdownMenu
         .contains(event.target)) {
         closeDropdown();
       }
     });
   }
-
-  function disableBodyScroll() {
-    document.body.classList.add('dropdown-open');
-  }
-
-  function enableBodyScroll() {
-    document.body.classList.remove('dropdown-open');
-  }
-
+  
+  function disableBodyScroll() { document.body.classList.add('dropdown-open');}
+  function enableBodyScroll() { document.body.classList.remove('dropdown-open');}
   function parseURLParameters() {
     const urlParams = new URLSearchParams(window.location.search);
     const modeParam = urlParams.get('mode');
     if (modeParam && (modeParam === 'items' || modeParam === 'icons')) {
-      state.currentMode = modeParam;
-      state.modeTab.textContent = modeParam === 'items' ? 'Items' : 'Icons';
-      state.modeTab.classList.toggle('active', true);
+      def.currentMode = modeParam;
+      def.modeTab.textContent = modeParam === 'items' ? 'Items' : 'Icons';
+      def.modeTab.classList.toggle('active', true);
     }
     const typeParam = urlParams.get('type');
     if (typeParam) {
-      state.currentType = typeParam;
+      def.currentType = typeParam;
     }
     const rarityParam = urlParams.get('rare');
     if (rarityParam) {
-      state.currentRarity = rarityParam;
+      def.currentRarity = rarityParam;
     }
     const searchParam = urlParams.get('q');
     if (searchParam) {
-      state.currentSearchQuery = searchParam;
-      state.searchTextarea.value = searchParam;
+      def.currentSearchQuery = searchParam;
+      def.searchTextarea.value = searchParam;
     }
   }
-
+  
   function updateURLParameters() {
     const urlParams = new URLSearchParams();
-    urlParams.set('mode', state.currentMode);
-    if (state.currentType) {
-      urlParams.set('type', state.currentType);
+    urlParams.set('mode', def.currentMode);
+    if (def.currentType) {
+      urlParams.set('type', def.currentType);
     }
-    if (state.currentRarity) {
-      urlParams.set('rare', state.currentRarity);
+    if (def.currentRarity) {
+      urlParams.set('rare', def.currentRarity);
     }
-    if (state.currentSearchQuery) {
-      urlParams.set('q', state.currentSearchQuery);
+    if (def.currentSearchQuery) {
+      urlParams.set('q', def.currentSearchQuery);
     }
     const newUrl = urlParams.toString() ? `${window.location.pathname}?${urlParams.toString()}` : window
       .location.pathname;
-    window.history.replaceState({}, '', newUrl);
+    window.history.replacedef({}, '', newUrl);
   }
-
+  
   function handleDocumentClick(e) {
     const target = e.target;
     if (target.classList.contains('footer-pill')) {
@@ -153,107 +91,99 @@ const Logic = (function() {
       handleBoxClick(box);
     }
   }
-
+  
   function handleTouchMove(e) {
-    if (state.activeClone) {
+    if (def.activeClone) {
       e.preventDefault();
     }
   }
-
   function handleSearchInput(e) {
-    state.currentPage = 1;
-    state.currentSearchQuery = e.target.value.trim();
+    def.currentPage = 1;
+    def.currentSearchQuery = e.target.value.trim();
     renderGrid();
     updateFilterDropdown();
     updateURLParameters();
   }
-
   function handleSearchKeydown(e) {
     if (e.key === 'Enter') {
       e.preventDefault();
       closeAllSheets();
     }
   }
-
   function handleFadeBgClick(e) {
-    if (e.target === state.fadeBg && !state.isModalAnimating) {
+    if (e.target === def.fadeBg && !def.isModalAnimating) {
       closeModal();
       closeAllSheets();
       closeDropdown();
     }
   }
-
   function handleModeTabClick() {
-    state.currentMode = state.currentMode === 'items' ? 'icons' : 'items';
-    state.currentPage = 1;
-    state.modeTab.textContent = state.currentMode === 'items' ? 'Items' : 'Icons';
-    state.modeTab.classList.add('active');
-    state.searchTextarea.placeholder = state.currentMode === 'items' ? 'Search' : 'Search';
+    def.currentMode = def.currentMode === 'items' ? 'icons' : 'items';
+    def.currentPage = 1;
+    def.modeTab.textContent = def.currentMode === 'items' ? 'Items' : 'Icons';
+    def.modeTab.classList.add('active');
+    def.searchTextarea.placeholder = def.currentMode === 'items' ? 'Search' : 'Search';
     renderGrid();
     updateURLParameters();
     updateFilterDropdown();
   }
-
   function handleFilterDropdownClick(e) {
     e.stopPropagation();
-    if (state.currentMode !== "items") return;
-    if (state.isDropdownOpen) {
+    if (def.currentMode !== "items") return;
+    if (def.isDropdownOpen) {
       closeDropdown();
     } else {
       openDropdown();
     }
   }
-
   function handleDropdownFilterClick(target) {
     const filterType = target.getAttribute('data-filter-type');
     const filterValue = target.getAttribute('data-filter-value');
     if (filterType === 'type') {
       if (filterValue === 'all') {
-        state.currentType = "";
+        def.currentType = "";
       } else {
-        state.currentType = filterValue;
+        def.currentType = filterValue;
       }
     } else if (filterType === 'rarity') {
       if (filterValue === 'all') {
-        state.currentRarity = "";
+        def.currentRarity = "";
       } else {
-        state.currentRarity = filterValue;
+        def.currentRarity = filterValue;
       }
     }
-    state.currentPage = 1;
+    def.currentPage = 1;
     closeDropdown();
     renderGrid();
     updateURLParameters();
   }
 
   function handleFooterPillClick(target) {
-    if (target === state.pagePill) {
+    if (target === def.pagePill) {
       openPageSheet();
     }
   }
-
   function handlePageButtonClick(target) {
     const page = parseInt(target.textContent);
-    state.currentPage = page;
+    def.currentPage = page;
     renderGrid();
     closeAllSheets();
   }
-
   function handleBoxClick(box) {
-    if (state.currentMode === 'items') {
-      const index = Array.from(state.grid.children).indexOf(box);
-      const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+    if (def.currentMode === 'items') {
+      const index = Array.from(def.grid.children).indexOf(box);
+      const startIndex = (def.currentPage - 1) * def.itemsPerPage;
       const actualIndex = startIndex + index;
-      if (actualIndex >= 0 && actualIndex < state.filteredItems.length) {
-        const item = state.filteredItems[actualIndex];
+      if (actualIndex >= 0 && actualIndex < def.filteredItems.length) {
+        const item = def.filteredItems[actualIndex];
         openModal(box, item);
       }
     } else {
-      const index = Array.from(state.grid.children).indexOf(box);
-      const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+      const index = Array.from(def.grid.children).indexOf(box);
+      const startIndex = (def.currentPage - 1) * def.itemsPerPage;
       const actualIndex = startIndex + index;
-      if (actualIndex >= 0 && actualIndex < state.filteredIcons.length) {
-        const iconName = state.filteredIcons[actualIndex];
+      if (actualIndex >= 0 && actualIndex < def.filteredIcons.length) {
+        const iconName = def.filteredIcons[actualIndex];
         const item = {
           "1": iconName,
           "3": extractIconName(iconName)
@@ -262,33 +192,30 @@ const Logic = (function() {
       }
     }
   }
-
   function fetchData() {
     Promise.all([
-      fetch('assets/itemData.json').then(r => r.ok ? r.json() : Promise.reject()),
-      fetch('assets/assets.json').then(r => r.ok ? r.json() : Promise.reject())
+      fetch('src/assets/itemData.json').then(r => r.ok ? r.json() : Promise.reject()),
+      fetch('src/assets/assets.json').then(r => r.ok ? r.json() : Promise.reject())
     ]).then(([itemsData, iconsData]) => {
-      state.allItems = itemsData;
-      state.allIcons = Array.isArray(iconsData) ? iconsData : Object.values(iconsData).filter(item =>
+      def.allItems = itemsData;
+      def.allIcons = Array.isArray(iconsData) ? iconsData : Object.values(iconsData).filter(item =>
         typeof item === 'string');
       processData();
       renderGrid();
       updateFilterDropdown();
     }).catch(error => {
-      state.grid.innerHTML =
+      def.grid.innerHTML =
         '<div class="no-results">Failed to load data. Please check if JSON files exist.</div>';
     });
   }
-
   function processData() {
-    state.allTypes = [...new Set(state.allItems.map(item => item["6"]).filter(Boolean))].sort();
-    state.allRarities = [...new Set(state.allItems.map(item => item["5"]).filter(Boolean))].filter(
-      rarity => rarity !== "255" && rarity !== "NONE").sort();
-    state.filteredItems = [...state.allItems];
-    state.filteredIcons = [...state.allIcons];
-    state.totalPages = Math.ceil(state.filteredItems.length / state.itemsPerPage);
+    def.allTypes = [...new Set(def.allItems.map(item => item["6"]).filter(Boolean))].sort();
+    def.allRarities = [...new Set(def.allItems.map(item => item["5"]).filter(Boolean))].filter(rarity => rarity !== "255" && rarity !== "NONE").sort();
+    def.filteredItems = [...def.allItems];
+    def.filteredIcons = [...def.allIcons];
+    def.totalPages = Math.ceil(def.filteredItems.length / def.itemsPerPage);
   }
-
+  
 function getImageUrl(iconName, itemID) {
   if (!iconName) return 'src/icons/not-found.png';
   if (iconName.includes('https://')) return iconName;
@@ -299,49 +226,55 @@ function createImageElement(iconName, className, altText, itemID) {
   const icon = document.createElement('img');
   icon.className = className;
   icon.alt = altText || 'Free Fire Item';
-  
-  const FALLBACK =
-    'https://cdn.jsdelivr.net/gh/9112000/FFItems@5e8cc4727d5e19ed975aed50497167bf9228fea4/assets/images/error-404.png';
-  
+  // Fallback *if
+  const final = 'icons/not-found.png';
   const urls = [];
-  
-  // 1️⃣ First priority: Crystal Person
+  /**
+   *  First priority
+   *  @credit Crystal-Person
+  */
   if (iconName) {
     urls.push(
       `https://raw.githubusercontent.com/0xme/ff-resources/refs/heads/main/pngs/300x300/${iconName}.png`
     );
   }
   
-  // 2️⃣ Second priority: IShowAkiru
+  /**
+     *  Second priority
+     *  @credit IshowAkiru
+   * 
+  */
   if (itemID) {
     urls.push(
       `https://cdn.jsdelivr.net/gh/I-SHOW-AKIRU200/AKIRU-ICONS@main/ICONS/${itemID}.png`
     );
   }
   
-  // 3️⃣ Last priority: ShahGCreator
+  /**
+   *  Last priority
+   *  @credit ShahGCreator
+  */
   if (itemID) {
     urls.push(`https://iconapi.wasmer.app/${itemID}`);
   }
   
   let index = 0;
-  
   function tryNext() {
     if (index >= urls.length) {
-      icon.src = FALLBACK;
+      icon.src = final;
       icon.classList.add('loaded');
       return;
     }
     
     const url = urls[index++];
     
-    if (state.imageCache.has(url)) {
+    if (def.imageCache.has(url)) {
       icon.src = url;
       icon.classList.add('loaded');
       return;
     }
     
-    if (state.failedImages.has(url)) {
+    if (def.failedImages.has(url)) {
       tryNext();
       return;
     }
@@ -350,17 +283,17 @@ function createImageElement(iconName, className, altText, itemID) {
     
     img.onload = function() {
       if (this.naturalWidth === 614 && this.naturalHeight === 614) {
-        state.failedImages.add(url);
+        def.failedImages.add(url);
         tryNext();
       } else {
         icon.src = url;
         icon.classList.add('loaded');
-        state.imageCache.set(url, url);
+        def.imageCache.set(url, url);
       }
     };
     
     img.onerror = function() {
-      state.failedImages.add(url);
+      def.failedImages.add(url);
       tryNext();
     };
     
@@ -370,7 +303,7 @@ function createImageElement(iconName, className, altText, itemID) {
   if (urls.length) {
     tryNext();
   } else {
-    icon.src = FALLBACK;
+    icon.src = final;
     icon.classList.add('loaded');
   }
   
@@ -378,58 +311,58 @@ function createImageElement(iconName, className, altText, itemID) {
 }
 
   function renderGrid() {
-    state.grid.innerHTML = "";
-    if (state.currentMode === "items") {
-      state.filteredItems = state.allItems.filter(item => {
-        const matchesSearch = !state.currentSearchQuery || 
-          (item["3"] && item["3"].toLowerCase().includes(state.currentSearchQuery.toLowerCase())) || 
-          (item["2"] && item["2"].toString().includes(state.currentSearchQuery)) || 
-          (item["1"] && item["1"].toLowerCase().includes(state.currentSearchQuery.toLowerCase())) || 
-          (item["4"] && item["4"].toLowerCase().includes(state.currentSearchQuery.toLowerCase()));
-        const matchesType = !state.currentType || item["6"] === state.currentType;
-        const matchesRarity = !state.currentRarity || item["5"] === state.currentRarity;
+    def.grid.innerHTML = "";
+    if (def.currentMode === "items") {
+      def.filteredItems = def.allItems.filter(item => {
+        const matchesSearch = !def.currentSearchQuery || 
+          (item["3"] && item["3"].toLowerCase().includes(def.currentSearchQuery.toLowerCase())) || 
+          (item["2"] && item["2"].toString().includes(def.currentSearchQuery)) || 
+          (item["1"] && item["1"].toLowerCase().includes(def.currentSearchQuery.toLowerCase())) || 
+          (item["4"] && item["4"].toLowerCase().includes(def.currentSearchQuery.toLowerCase()));
+        const matchesType = !def.currentType || item["6"] === def.currentType;
+        const matchesRarity = !def.currentRarity || item["5"] === def.currentRarity;
         return matchesSearch && matchesType && matchesRarity;
       });
-      state.totalPages = Math.ceil(state.filteredItems.length / state.itemsPerPage);
-      if (state.filteredItems.length === 0) {
-        state.grid.innerHTML = '<div class="no-results">No items found matching your filters</div>';
+      def.totalPages = Math.ceil(def.filteredItems.length / def.itemsPerPage);
+      if (def.filteredItems.length === 0) {
+        def.grid.innerHTML = '<div class="no-results">No items found matching your filters</div>';
         updateFilterDropdown();
         updateSearchResultsText();
         return;
       }
-      const startIndex = (state.currentPage - 1) * state.itemsPerPage;
-      const endIndex = Math.min(startIndex + state.itemsPerPage, state.filteredItems.length);
-      const itemsToShow = state.filteredItems.slice(startIndex, endIndex);
+      const startIndex = (def.currentPage - 1) * def.itemsPerPage;
+      const endIndex = Math.min(startIndex + def.itemsPerPage, def.filteredItems.length);
+      const itemsToShow = def.filteredItems.slice(startIndex, endIndex);
       itemsToShow.forEach(item => {
         const box = document.createElement('div');
         box.className = 'box';
         const icon = createImageElement(item["1"], 'icon', item["3"] || '', item["2"]);
         box.appendChild(icon);
-        state.grid.appendChild(box);
+        def.grid.appendChild(box);
       });
     } else {
-      if (state.currentSearchQuery) {
-        state.filteredIcons = state.allIcons.filter(iconName => iconName && iconName.toLowerCase()
-          .includes(state.currentSearchQuery.toLowerCase()));
+      if (def.currentSearchQuery) {
+        def.filteredIcons = def.allIcons.filter(iconName => iconName && iconName.toLowerCase()
+          .includes(def.currentSearchQuery.toLowerCase()));
       } else {
-        state.filteredIcons = [...state.allIcons];
+        def.filteredIcons = [...def.allIcons];
       }
-      state.totalPages = Math.ceil(state.filteredIcons.length / state.itemsPerPage);
-      if (state.filteredIcons.length === 0) {
-        state.grid.innerHTML = '<div class="no-results">No icons found matching your search</div>';
+      def.totalPages = Math.ceil(def.filteredIcons.length / def.itemsPerPage);
+      if (def.filteredIcons.length === 0) {
+        def.grid.innerHTML = '<div class="no-results">No icons found matching your search</div>';
         updateFilterDropdown();
         updateSearchResultsText();
         return;
       }
-      const startIndex = (state.currentPage - 1) * state.itemsPerPage;
-      const endIndex = Math.min(startIndex + state.itemsPerPage, state.filteredIcons.length);
-      const iconsToShow = state.filteredIcons.slice(startIndex, endIndex);
+      const startIndex = (def.currentPage - 1) * def.itemsPerPage;
+      const endIndex = Math.min(startIndex + def.itemsPerPage, def.filteredIcons.length);
+      const iconsToShow = def.filteredIcons.slice(startIndex, endIndex);
       iconsToShow.forEach(iconName => {
         const box = document.createElement('div');
         box.className = 'box';
         const icon = createImageElement(iconName, 'icon', iconName, null);
         box.appendChild(icon);
-        state.grid.appendChild(box);
+        def.grid.appendChild(box);
       });
     }
     updateFilterDropdown();
@@ -448,17 +381,17 @@ function createImageElement(iconName, className, altText, itemID) {
   }
 
   function updateFilterDropdown() {
-    state.pagePill.textContent = `Page ${state.currentPage}/${state.totalPages}`;
-    if (state.currentMode === "items") {
-      state.filterDropdown.style.display = 'flex';
+    def.pagePill.textContent = `Page ${def.currentPage}/${def.totalPages}`;
+    if (def.currentMode === "items") {
+      def.filterDropdown.style.display = 'flex';
       let filterText = "Filters";
-      if (state.currentType || state.currentRarity) {
+      if (def.currentType || def.currentRarity) {
         const activeFilters = [];
-        if (state.currentType) activeFilters.push(state.currentType);
-        if (state.currentRarity) {
-          let displayRarity = state.currentRarity;
-          if (state.rarityMap[state.currentRarity]) {
-            displayRarity = state.rarityMap[state.currentRarity];
+        if (def.currentType) activeFilters.push(def.currentType);
+        if (def.currentRarity) {
+          let displayRarity = def.currentRarity;
+          if (def.rarityMap[def.currentRarity]) {
+            displayRarity = def.rarityMap[def.currentRarity];
           }
           activeFilters.push(displayRarity);
         }
@@ -467,16 +400,16 @@ function createImageElement(iconName, className, altText, itemID) {
           filterText = filterText.substring(0, 20) + '...';
         }
       }
-      state.filterDropdown.innerHTML = `${filterText}`;
+      def.filterDropdown.innerHTML = `${filterText}`;
       updateDropdownMenu();
     } else {
-      state.filterDropdown.style.display = 'none';
+      def.filterDropdown.style.display = 'none';
     }
   }
 
   function updateDropdownMenu() {
-    if (!state.dropdownMenu) return;
-    state.dropdownMenu.innerHTML = '';
+    if (!def.dropdownMenu) return;
+    def.dropdownMenu.innerHTML = '';
     const typeSection = document.createElement('div');
     typeSection.className = 'dropdown-section';
     const typeTitle = document.createElement('div');
@@ -484,20 +417,20 @@ function createImageElement(iconName, className, altText, itemID) {
     typeTitle.textContent = 'Type';
     typeSection.appendChild(typeTitle);
     const allTypesBtn = document.createElement('button');
-    allTypesBtn.className = `dropdown-filter-btn ${!state.currentType ? 'active' : ''}`;
+    allTypesBtn.className = `dropdown-filter-btn ${!def.currentType ? 'active' : ''}`;
     allTypesBtn.textContent = 'All Types';
     allTypesBtn.setAttribute('data-filter-type', 'type');
     allTypesBtn.setAttribute('data-filter-value', 'all');
     typeSection.appendChild(allTypesBtn);
-    state.allTypes.forEach(type => {
+    def.allTypes.forEach(type => {
       const typeBtn = document.createElement('button');
-      typeBtn.className = `dropdown-filter-btn ${state.currentType === type ? 'active' : ''}`;
+      typeBtn.className = `dropdown-filter-btn ${def.currentType === type ? 'active' : ''}`;
       typeBtn.textContent = type;
       typeBtn.setAttribute('data-filter-type', 'type');
       typeBtn.setAttribute('data-filter-value', type);
       typeSection.appendChild(typeBtn);
     });
-    state.dropdownMenu.appendChild(typeSection);
+    def.dropdownMenu.appendChild(typeSection);
     const raritySection = document.createElement('div');
     raritySection.className = 'dropdown-section';
     const rarityTitle = document.createElement('div');
@@ -505,49 +438,49 @@ function createImageElement(iconName, className, altText, itemID) {
     rarityTitle.textContent = 'Rarity';
     raritySection.appendChild(rarityTitle);
     const allRaritiesBtn = document.createElement('button');
-    allRaritiesBtn.className = `dropdown-filter-btn ${!state.currentRarity ? 'active' : ''}`;
+    allRaritiesBtn.className = `dropdown-filter-btn ${!def.currentRarity ? 'active' : ''}`;
     allRaritiesBtn.textContent = 'All Rarities';
     allRaritiesBtn.setAttribute('data-filter-type', 'rarity');
     allRaritiesBtn.setAttribute('data-filter-value', 'all');
     raritySection.appendChild(allRaritiesBtn);
-    state.allRarities.forEach(rarity => {
+    def.allRarities.forEach(rarity => {
       const rarityBtn = document.createElement('button');
-      rarityBtn.className = `dropdown-filter-btn ${state.currentRarity === rarity ? 'active' : ''}`;
+      rarityBtn.className = `dropdown-filter-btn ${def.currentRarity === rarity ? 'active' : ''}`;
       let displayName = rarity;
-      if (state.rarityMap[rarity]) {
-        displayName = state.rarityMap[rarity];
+      if (def.rarityMap[rarity]) {
+        displayName = def.rarityMap[rarity];
       }
       rarityBtn.textContent = displayName;
       rarityBtn.setAttribute('data-filter-type', 'rarity');
       rarityBtn.setAttribute('data-filter-value', rarity);
       raritySection.appendChild(rarityBtn);
     });
-    state.dropdownMenu.appendChild(raritySection);
+    def.dropdownMenu.appendChild(raritySection);
   }
 
   function updateSearchResultsText() {
-    if (state.currentSearchQuery || state.currentType || state.currentRarity) {
-      const itemCount = state.currentMode === "items" ? state.filteredItems.length : state.filteredIcons
+    if (def.currentSearchQuery || def.currentType || def.currentRarity) {
+      const itemCount = def.currentMode === "items" ? def.filteredItems.length : def.filteredIcons
         .length;
       let filterText = [];
-      if (state.currentSearchQuery) filterText.push(`"${state.currentSearchQuery}"`);
-      if (state.currentType) filterText.push(`Type: ${state.currentType}`);
-      if (state.currentRarity) {
-        let displayRarity = state.currentRarity;
-        if (state.rarityMap[state.currentRarity]) {
-          displayRarity = state.rarityMap[state.currentRarity];
+      if (def.currentSearchQuery) filterText.push(`"${def.currentSearchQuery}"`);
+      if (def.currentType) filterText.push(`Type: ${def.currentType}`);
+      if (def.currentRarity) {
+        let displayRarity = def.currentRarity;
+        if (def.rarityMap[def.currentRarity]) {
+          displayRarity = def.rarityMap[def.currentRarity];
         }
         filterText.push(`Rarity: ${displayRarity}`);
       }
     } else {
-      state.searchResults.textContent = "";
+      def.searchResults.textContent = "";
     }
   }
 
   function openDropdown() {
-    if (state.currentMode !== "items") return;
+    if (def.currentMode !== "items") return;
     updateDropdownMenu();
-    const rect = state.filterDropdown.getBoundingClientRect();
+    const rect = def.filterDropdown.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const dropdownWidth = 220;
     let leftPosition = rect.right - dropdownWidth;
@@ -557,63 +490,60 @@ function createImageElement(iconName, className, altText, itemID) {
     if (leftPosition + dropdownWidth > viewportWidth - 10) {
       leftPosition = viewportWidth - dropdownWidth - 10;
     }
-    state.dropdownMenu.style.left = leftPosition + 'px';
-    state.dropdownMenu.style.top = rect.bottom + 10 + 'px';
-    state.dropdownMenu.style.right = 'auto';
-    state.dropdownMenu.classList.add('active');
-    state.filterDropdown.classList.add('active');
-    state.fadeBg.classList.add('active');
-    state.isDropdownOpen = true;
+    def.dropdownMenu.style.left = leftPosition + 'px';
+    def.dropdownMenu.style.top = rect.bottom + 10 + 'px';
+    def.dropdownMenu.style.right = 'auto';
+    def.dropdownMenu.classList.add('active');
+    def.filterDropdown.classList.add('active');
+    def.fadeBg.classList.add('active');
+    def.isDropdownOpen = true;
     disableBodyScroll();
   }
 
   function closeDropdown() {
-    state.dropdownMenu.classList.remove('active');
-    state.filterDropdown.classList.remove('active');
-    state.fadeBg.classList.remove('active');
-    state.isDropdownOpen = false;
+    def.dropdownMenu.classList.remove('active');
+    def.filterDropdown.classList.remove('active');
+    def.fadeBg.classList.remove('active');
+    def.isDropdownOpen = false;
     enableBodyScroll();
   }
 
   function openPageSheet() {
-    state.pagesGrid.innerHTML = "";
-    for (let i = 1; i <= state.totalPages; i++) {
+    def.pagesGrid.innerHTML = "";
+    for (let i = 1; i <= def.totalPages; i++) {
       const btn = document.createElement('button');
-      btn.className = `sheet-page-btn ${i === state.currentPage ? 'active' : ''}`;
+      btn.className = `sheet-page-btn ${i === def.currentPage ? 'active' : ''}`;
       btn.textContent = i;
-      state.pagesGrid.appendChild(btn);
+      def.pagesGrid.appendChild(btn);
     }
-    openSheet(state.pageSheet);
+    openSheet(def.pageSheet);
   }
 
-  function openSearchSheet() {
-    openSheet(state.searchSheet);
-  }
-
+  function openSearchSheet() { openSheet(def.searchSheet); }
   function openSheet(sheet) {
     closeAllSheets();
     closeDropdown();
     sheet.classList.add('active');
-    state.fadeBg.classList.add('active');
+    def.fadeBg.classList.add('active');
     document.body.style.touchAction = 'none';
   }
 
   function closeAllSheets() {
     document.body.style.touchAction = '';
-    state.pageSheet.classList.remove('active');
-    state.searchSheet.classList.remove('active');
-    state.fadeBg.classList.remove('active');
+    def.pageSheet.classList.remove('active');
+    def.searchSheet.classList.remove('active');
+    def.fadeBg.classList.remove('active');
   }
 
   function openModal(box, item) {
-    if (state.activeClone || state.isModalAnimating) return;
-    state.isModalAnimating = true;
+    if (def.activeClone || def.isModalAnimating) return;
+    def.isModalAnimating = true;
     document.body.style.overflow = 'hidden';
     const rect = box.getBoundingClientRect();
-    state.modalContainer = document.createElement('div');
-    state.modalContainer.className = 'modal-container';
-    state.modalContainer.style.pointerEvents = 'none';
-    document.body.appendChild(state.modalContainer);
+    def.modalContainer = document.createElement('div');
+    def.modalContainer.className = 'modal-container';
+    def.modalContainer.style.pointerEvents = 'none';
+    document.body.appendChild(def.modalContainer);
     const modal = document.createElement('div');
     modal.classList.add('modal');
     modal.style.left = rect.left + 'px';
@@ -624,28 +554,28 @@ function createImageElement(iconName, className, altText, itemID) {
     const modalIcon = createImageElement(item["1"], 'modal-icon', item["3"] || item["1"], item["2"]);
     modalIcon.style.pointerEvents = 'none';
     modal.appendChild(modalIcon);
-    state.modalContainer.appendChild(modal);
-    state.activeClone = modal;
-    state.originalBox = box;
+    def.modalContainer.appendChild(modal);
+    def.activeClone = modal;
+    def.originalBox = box;
     setTimeout(() => {
-      state.fadeBg.classList.add('active');
-      state.modalContainer.classList.add('active');
+      def.fadeBg.classList.add('active');
+      def.modalContainer.classList.add('active');
       modal.style.left = '50%';
       modal.style.top = 'calc(50% - 100px)';
       modal.style.transform = 'translate(-50%, -50%) scale(1.8)';
       modal.style.width = '200px';
       modal.style.height = '200px';
       setTimeout(() => {
-        state.detailsCard = createDetailsCard(item);
-        state.modalContainer.appendChild(state.detailsCard);
+        def.detailsCard = createDetailsCard(item);
+        def.modalContainer.appendChild(def.detailsCard);
         const modalRect = modal.getBoundingClientRect();
-        state.detailsCard.style.left = '50%';
-        state.detailsCard.style.top = (modalRect.bottom + 20) + 'px';
-        state.detailsCard.style.width = modalRect.width + 'px';
-        state.detailsCard.style.transform = 'translateX(-50%)';
+        def.detailsCard.style.left = '50%';
+        def.detailsCard.style.top = (modalRect.bottom + 20) + 'px';
+        def.detailsCard.style.width = modalRect.width + 'px';
+        def.detailsCard.style.transform = 'translateX(-50%)';
         setTimeout(() => {
-          state.detailsCard.classList.add('active');
-          state.isModalAnimating = false;
+          def.detailsCard.classList.add('active');
+          def.isModalAnimating = false;
         }, 50);
       }, 400);
     }, 50);
@@ -654,7 +584,7 @@ function createImageElement(iconName, className, altText, itemID) {
   function createDetailsCard(item) {
     const detailsCard = document.createElement('div');
     detailsCard.className = 'details-card';
-    if (state.currentMode === 'icons') {
+    if (def.currentMode === 'icons') {
       const iconNameTitle = document.createElement('div');
       iconNameTitle.className = 'details-title ibm-plex-mono-bold';
       iconNameTitle.textContent = extractIconName(item["1"]);
@@ -704,37 +634,33 @@ function createImageElement(iconName, className, altText, itemID) {
   }
 
   function closeModal() {
-    if (!state.activeClone || !state.originalBox || state.isModalAnimating) return;
-    state.isModalAnimating = true;
+    if (!def.activeClone || !def.originalBox || def.isModalAnimating) return;
+    def.isModalAnimating = true;
     document.body.style.overflow = '';
-    if (state.detailsCard) {
-      state.detailsCard.style.transform = 'translateX(-50%) translateY(20px)';
-      state.detailsCard.style.opacity = '0';
+    if (def.detailsCard) {
+      def.detailsCard.style.transform = 'translateX(-50%) translateY(20px)';
+      def.detailsCard.style.opacity = '0';
     }
-    state.fadeBg.classList.remove('active');
-    state.modalContainer.classList.remove('active');
-    const rect = state.originalBox.getBoundingClientRect();
-    state.activeClone.style.left = rect.left + 'px';
-    state.activeClone.style.top = rect.top + 'px';
-    state.activeClone.style.width = rect.width + 'px';
-    state.activeClone.style.height = rect.height + 'px';
-    state.activeClone.style.transform = 'translate(0,0) scale(1)';
+    def.fadeBg.classList.remove('active');
+    def.modalContainer.classList.remove('active');
+    const rect = def.originalBox.getBoundingClientRect();
+    def.activeClone.style.left = rect.left + 'px';
+    def.activeClone.style.top = rect.top + 'px';
+    def.activeClone.style.width = rect.width + 'px';
+    def.activeClone.style.height = rect.height + 'px';
+    def.activeClone.style.transform = 'translate(0,0) scale(1)';
     setTimeout(() => {
-      if (state.modalContainer && state.modalContainer.parentNode) {
-        state.modalContainer.remove();
+      if (def.modalContainer && def.modalContainer.parentNode) {
+        def.modalContainer.remove();
       }
-      state.activeClone = null;
-      state.modalContainer = null;
-      state.detailsCard = null;
-      state.isModalAnimating = false;
+      def.activeClone = null;
+      def.modalContainer = null;
+      def.detailsCard = null;
+      def.isModalAnimating = false;
     }, 400);
   }
   
-  return {
-    init: init
-  };
+  return { init: init };
 })();
 
-document.addEventListener('DOMContentLoaded', function() {
-  Logic.init();
-});
+document.addEventListener('DOMContentLoaded', function() { require.init(); });
