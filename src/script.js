@@ -265,8 +265,8 @@ const Logic = (function() {
 
   function fetchData() {
     Promise.all([
-      fetch('src/assets/itemData.json').then(r => r.ok ? r.json() : Promise.reject()),
-      fetch('src/assets/assets.json').then(r => r.ok ? r.json() : Promise.reject())
+      fetch('assets/itemData.json').then(r => r.ok ? r.json() : Promise.reject()),
+      fetch('assets/assets.json').then(r => r.ok ? r.json() : Promise.reject())
     ]).then(([itemsData, iconsData]) => {
       state.allItems = itemsData;
       state.allIcons = Array.isArray(iconsData) ? iconsData : Object.values(iconsData).filter(item =>
@@ -305,21 +305,21 @@ function createImageElement(iconName, className, altText, itemID) {
   
   const urls = [];
   
-  // 1️⃣ First priority: 0xMe
+  // 1️⃣ First priority: Crystal Person
   if (iconName) {
     urls.push(
       `https://raw.githubusercontent.com/0xme/ff-resources/refs/heads/main/pngs/300x300/${iconName}.png`
     );
   }
   
-  // 2️⃣ Second priority: AKIRU
+  // 2️⃣ Second priority: IShowAkiru
   if (itemID) {
     urls.push(
       `https://cdn.jsdelivr.net/gh/I-SHOW-AKIRU200/AKIRU-ICONS@main/ICONS/${itemID}.png`
     );
   }
   
-  // 3️⃣ Last priority: wasmer.app
+  // 3️⃣ Last priority: ShahGCreator
   if (itemID) {
     urls.push(`https://iconapi.wasmer.app/${itemID}`);
   }
@@ -349,7 +349,6 @@ function createImageElement(iconName, className, altText, itemID) {
     const img = new Image();
     
     img.onload = function() {
-      // wasmer ka known placeholder check
       if (this.naturalWidth === 614 && this.naturalHeight === 614) {
         state.failedImages.add(url);
         tryNext();
