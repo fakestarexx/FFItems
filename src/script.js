@@ -226,7 +226,7 @@ function createImageElement(iconName, className, altText, itemID) {
   const icon = document.createElement('img');
   icon.className = className;
   icon.alt = altText || 'Free Fire Item';
-  // Fallback *if
+  /* @return Fallback Image */
   const final = 'icons/not-found.png';
   const urls = [];
   /**
