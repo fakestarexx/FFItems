@@ -1,6 +1,5 @@
-
 const require = (function() {
-  let def = {grid: null, fadeBg: null, pagePill: null, filterDropdown: null, dropdownMenu: null,pageSheet: null, searchSheet: null, searchTextarea: null, pagesGrid: null,searchResults: null, modeTab: null, activeClone: null, originalBox: null,detailsCard: null, modalContainer: null, currentPage: 1, itemsPerPage: 100,allItems: [], allIcons: [], filteredItems: [], filteredIcons: [], totalPages: 1,currentSearchQuery: "", currentMode: "items", currentType: "", currentRarity: "",allTypes: [], allRarities: [], imageCache: new Map(), failedImages: new Set(),isModalAnimating: false, isDropdownOpen: false, rarityMap: {WHITE: "Common", BLUE: "Rare", GREEN: "Uncommon", ORANGE: "Mythic",ORANGE_PLUS: "Mythic+", PURPLE: "Epic", PURPLE_PLUS: "Epic+", RED: "Artifact", NONE: "None"}};
+  let def = {grid: null,fadeBg: null,pagePill: null,filterDropdown: null,dropdownMenu: null,pageSheet: null,searchTextarea: null,pagesGrid: null,searchResults: null,modeTab: null,activeClone: null,originalBox: null,detailsCard: null,modalContainer: null,currentPage: 1,itemsPerPage: 100,allItems: [],allIcons: [],filteredItems: [],filteredIcons: [],totalPages: 1,currentSearchQuery: "",currentMode: "items",currentType: "",currentRarity: "",allTypes: [],allRarities: [],imageCache: new Map(),failedImages: new Set(),isModalAnimating: false,isDropdownOpen: false,rarityMap: {WHITE: "Common",BLUE: "Rare",GREEN: "Uncommon",ORANGE: "Mythic",ORANGE_PLUS: "Mythic+",PURPLE: "Epic",PURPLE_PLUS: "Epic+",RED: "Artifact",NONE: "None"}};
   function init() {setupElements();setupEventDelegation();parseURLParameters();fetchData();createDropdownMenu();}
   function setupElements() {
     def.grid = document.getElementById('grid');
@@ -8,12 +7,12 @@ const require = (function() {
     def.pagePill = document.getElementById('pagePill');
     def.filterDropdown = document.getElementById('filterDropdown');
     def.pageSheet = document.getElementById('pageSheet');
-    def.searchSheet = document.getElementById('searchSheet');
     def.searchTextarea = document.getElementById('searchTextarea');
     def.pagesGrid = document.getElementById('pagesGrid');
     def.searchResults = document.getElementById('searchResults');
     def.modeTab = document.getElementById('modeTab');
   }
+
   function createDropdownMenu() {
     def.dropdownMenu = document.createElement('div');
     def.dropdownMenu.className = 'dropdown-menu';
@@ -23,7 +22,7 @@ const require = (function() {
 
   function setupEventDelegation() {
     document.addEventListener('click', handleDocumentClick);
-    document.addEventListener('touchmove', handleTouchMove, {passive: false});
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     def.searchTextarea.addEventListener('input', handleSearchInput);
     def.searchTextarea.addEventListener('keydown', handleSearchKeydown);
     def.fadeBg.addEventListener('click', handleFadeBgClick);
@@ -36,67 +35,16 @@ const require = (function() {
     });
   }
 
-  function disableBodyScroll() { document.body.classList.add('dropdown-open'); }
-  function enableBodyScroll() { document.body.classList.remove('dropdown-open'); }
-
-  function stringToHex(str) {
-    let hex = '';
-    for(let i = 0; i < str.length; i++) {
-      hex += str.charCodeAt(i).toString(16).padStart(2, '0');
-    }
-    return hex;
+  function disableBodyScroll() {
+    document.body.classList.add('dropdown-open');
   }
 
-  function hexToString(hex) {
-    let str = '';
-    for(let i = 0; i < hex.length; i += 2) {
-      str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    }
-    return str;
+  function enableBodyScroll() {
+    document.body.classList.remove('dropdown-open');
   }
 
   function parseURLParameters() {
     const urlParams = new URLSearchParams(window.location.search);
-    
-    const itemIdParam = urlParams.get('i');
-    if (itemIdParam) {
-      sessionStorage.setItem('directItemId', itemIdParam);
-      return;
-    }
-    
-    const qParam = urlParams.get('q');
-    if (qParam) {
-      try {
-        if (!qParam.startsWith('"') && /^[0-9a-fA-F]+$/.test(qParam)) {
-          const decodedData = hexToString(qParam);
-          const parts = decodedData.split('#');
-          
-          if (parts.length >= 3) {
-            def.currentType = parts[0] || "";
-            def.currentRarity = parts[1] || "";
-            const pageNum = parseInt(parts[2]) || 1;
-            if (pageNum > 0) def.currentPage = pageNum;
-            
-            if (parts.length >= 4) {
-              const modeParam = parts[3];
-              if (modeParam === 'items' || modeParam === 'icons') {
-                def.currentMode = modeParam;
-                def.modeTab.textContent = modeParam === 'items' ? 'Items' : 'Icons';
-              }
-            }
-            return;
-          }
-        }
-      } catch (e) {}
-      
-      if (qParam.startsWith('"') && qParam.endsWith('"')) {
-        def.currentSearchQuery = qParam.slice(1, -1);
-        def.searchTextarea.value = def.currentSearchQuery;
-      } else {
-        def.currentSearchQuery = qParam;
-        def.searchTextarea.value = qParam;
-      }
-    }
     
     const modeParam = urlParams.get('mode');
     if (modeParam && (modeParam === 'items' || modeParam === 'icons')) {
@@ -106,84 +54,117 @@ const require = (function() {
     }
     
     const typeParam = urlParams.get('type');
-    if (typeParam) def.currentType = typeParam;
+    if (typeParam) {
+      def.currentType = typeParam;
+    }
     
     const rarityParam = urlParams.get('rare');
-    if (rarityParam) def.currentRarity = rarityParam;
+    if (rarityParam) {
+      def.currentRarity = rarityParam;
+    }
+    
+    const searchParam = urlParams.get('q');
+    if (searchParam) {
+      def.currentSearchQuery = searchParam;
+      def.searchTextarea.value = searchParam;
+    }
     
     const pageParam = urlParams.get('page');
     if (pageParam) {
       const pageNum = parseInt(pageParam);
-      if (!isNaN(pageNum) && pageNum > 0) def.currentPage = pageNum;
+      if (!isNaN(pageNum) && pageNum > 0) {
+        def.currentPage = pageNum;
+      }
+    }
+    
+    const openParam = urlParams.get('open');
+    if (openParam) {
+      setTimeout(() => {
+        handleOpenParameter(openParam);
+      }, 500);
+    }
+  }
+
+  function handleOpenParameter(openParam) {
+    const isNumber = /^\d+$/.test(openParam);
+    
+    if (isNumber) {
+      const itemId = parseInt(openParam);
+      const item = def.allItems.find(item => item["2"] === itemId);
+      if (item) {
+        def.currentMode = "items";
+        def.modeTab.textContent = "Items";
+        def.modeTab.classList.add('active');
+        
+        const itemIndex = def.filteredItems.indexOf(item);
+        if (itemIndex !== -1) {
+          const pageForItem = Math.floor(itemIndex / def.itemsPerPage) + 1;
+          def.currentPage = pageForItem;
+          
+          renderGrid();
+          updateFilterDropdown();
+          updateURLParameters();
+          
+          setTimeout(() => {
+            const boxIndex = itemIndex % def.itemsPerPage;
+            const boxes = def.grid.querySelectorAll('.box');
+            if (boxes[boxIndex]) {
+              openModal(boxes[boxIndex], item);
+            }
+          }, 100);
+        }
+      }
+    } else if (openParam.includes('_')) {
+      const iconName = openParam;
+      const iconIndex = def.allIcons.findIndex(icon => icon === iconName || extractIconName(icon) === iconName);
+      
+      if (iconIndex !== -1) {
+        def.currentMode = "icons";
+        def.modeTab.textContent = "Icons";
+        def.modeTab.classList.add('active');
+        
+        const pageForIcon = Math.floor(iconIndex / def.itemsPerPage) + 1;
+        def.currentPage = pageForIcon;
+        
+        renderGrid();
+        updateFilterDropdown();
+        updateURLParameters();
+        
+        setTimeout(() => {
+          const boxIndex = iconIndex % def.itemsPerPage;
+          const boxes = def.grid.querySelectorAll('.box');
+          if (boxes[boxIndex]) {
+            const item = {
+              "1": def.allIcons[iconIndex],
+              "3": extractIconName(def.allIcons[iconIndex])
+            };
+            openModal(boxes[boxIndex], item);
+          }
+        }, 100);
+      }
     }
   }
 
   function updateURLParameters() {
     const urlParams = new URLSearchParams();
     
+    urlParams.set('mode', def.currentMode);
+    urlParams.set('page', def.currentPage);
+    
+    if (def.currentType) {
+      urlParams.set('type', def.currentType);
+    }
+    
+    if (def.currentRarity) {
+      urlParams.set('rare', def.currentRarity);
+    }
+    
     if (def.currentSearchQuery) {
-      urlParams.set('q', `"${def.currentSearchQuery}"`);
-    } else if (def.currentType || def.currentRarity || def.currentPage !== 1 || def.currentMode !== "items") {
-      const filterString = `${def.currentType}#${def.currentRarity}#${def.currentPage}#${def.currentMode}`;
-      const hexString = stringToHex(filterString);
-      urlParams.set('q', hexString);
-    } else if (def.currentMode !== "items") {
-      urlParams.set('mode', def.currentMode);
+      urlParams.set('q', def.currentSearchQuery);
     }
     
     const newUrl = urlParams.toString() ? `${window.location.pathname}?${urlParams.toString()}` : window.location.pathname;
     window.history.replaceState({}, '', newUrl);
-  }
-
-  function handleDirectItem() {
-    const itemId = sessionStorage.getItem('directItemId');
-    if (!itemId || def.allItems.length === 0) return;
-    
-    const item = def.allItems.find(i => i["2"] && i["2"].toString() === itemId);
-    if (!item) {
-      sessionStorage.removeItem('directItemId');
-      return;
-    }
-    
-    sessionStorage.removeItem('directItemId');
-    const urlParams = new URLSearchParams();
-    urlParams.set('i', itemId);
-    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
-    
-    const itemIndex = def.filteredItems.findIndex(i => i["2"] && i["2"].toString() === itemId);
-    if (itemIndex === -1) {
-      def.currentSearchQuery = "";
-      def.currentType = "";
-      def.currentRarity = "";
-      def.currentPage = 1;
-      def.searchTextarea.value = "";
-      renderGrid();
-      
-      const newItemIndex = def.filteredItems.findIndex(i => i["2"] && i["2"].toString() === itemId);
-      if (newItemIndex !== -1) {
-        const itemPage = Math.floor(newItemIndex / def.itemsPerPage) + 1;
-        def.currentPage = itemPage;
-        renderGrid();
-        
-        setTimeout(() => {
-          const boxes = document.querySelectorAll('.box');
-          const pageIndex = newItemIndex % def.itemsPerPage;
-          if (boxes[pageIndex]) handleBoxClick(boxes[pageIndex]);
-        }, 500);
-      }
-    } else {
-      const itemPage = Math.floor(itemIndex / def.itemsPerPage) + 1;
-      if (itemPage !== def.currentPage) {
-        def.currentPage = itemPage;
-        renderGrid();
-      }
-      
-      setTimeout(() => {
-        const boxes = document.querySelectorAll('.box');
-        const pageIndex = itemIndex % def.itemsPerPage;
-        if (boxes[pageIndex]) handleBoxClick(boxes[pageIndex]);
-      }, 500);
-    }
   }
 
   function handleDocumentClick(e) {
@@ -201,7 +182,9 @@ const require = (function() {
   }
 
   function handleTouchMove(e) {
-    if (def.activeClone) e.preventDefault();
+    if (def.activeClone) {
+      e.preventDefault();
+    }
   }
 
   function handleSearchInput(e) {
@@ -253,9 +236,17 @@ const require = (function() {
     const filterValue = target.getAttribute('data-filter-value');
     
     if (filterType === 'type') {
-      def.currentType = filterValue === 'all' ? "" : filterValue;
+      if (filterValue === 'all') {
+        def.currentType = "";
+      } else {
+        def.currentType = filterValue;
+      }
     } else if (filterType === 'rarity') {
-      def.currentRarity = filterValue === 'all' ? "" : filterValue;
+      if (filterValue === 'all') {
+        def.currentRarity = "";
+      } else {
+        def.currentRarity = filterValue;
+      }
     }
     
     def.currentPage = 1;
@@ -265,7 +256,9 @@ const require = (function() {
   }
 
   function handleFooterPillClick(target) {
-    if (target === def.pagePill) openPageSheet();
+    if (target === def.pagePill) {
+      openPageSheet();
+    }
   }
 
   function handlePageButtonClick(target) {
@@ -283,9 +276,6 @@ const require = (function() {
       const actualIndex = startIndex + index;
       if (actualIndex >= 0 && actualIndex < def.filteredItems.length) {
         const item = def.filteredItems[actualIndex];
-        const urlParams = new URLSearchParams();
-        urlParams.set('i', item["2"]);
-        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
         openModal(box, item);
       }
     } else {
@@ -294,7 +284,10 @@ const require = (function() {
       const actualIndex = startIndex + index;
       if (actualIndex >= 0 && actualIndex < def.filteredIcons.length) {
         const iconName = def.filteredIcons[actualIndex];
-        const item = {"1": iconName, "3": extractIconName(iconName)};
+        const item = {
+          "1": iconName,
+          "3": extractIconName(iconName)
+        };
         openModal(box, item);
       }
     }
@@ -310,8 +303,6 @@ const require = (function() {
       processData();
       renderGrid();
       updateFilterDropdown();
-      updateURLParameters();
-      handleDirectItem();
     }).catch(error => {
       def.grid.innerHTML = '<div class="no-results">Failed to load data. Please check if JSON files exist.</div>';
     });
@@ -334,16 +325,11 @@ const require = (function() {
     }
   }
 
-  function getImageUrl(iconName, itemID) {
-    if (!iconName) return 'src/icons/not-found.png';
-    if (iconName.includes('https://')) return iconName;
-    return null;
-  }
-
   function createImageElement(iconName, className, altText, itemID) {
     const icon = document.createElement('img');
     icon.className = className;
     icon.alt = altText || 'Free Fire Item';
+    
     const final = 'icons/not-found.png';
     const urls = [];
     
@@ -422,8 +408,10 @@ const require = (function() {
           (item["2"] && item["2"].toString().includes(def.currentSearchQuery)) || 
           (item["1"] && item["1"].toLowerCase().includes(def.currentSearchQuery.toLowerCase())) || 
           (item["4"] && item["4"].toLowerCase().includes(def.currentSearchQuery.toLowerCase()));
+        
         const matchesType = !def.currentType || item["6"] === def.currentType;
         const matchesRarity = !def.currentRarity || item["5"] === def.currentRarity;
+        
         return matchesSearch && matchesType && matchesRarity;
       });
       
@@ -513,11 +501,15 @@ const require = (function() {
         if (def.currentType) activeFilters.push(def.currentType);
         if (def.currentRarity) {
           let displayRarity = def.currentRarity;
-          if (def.rarityMap[def.currentRarity]) displayRarity = def.rarityMap[def.currentRarity];
+          if (def.rarityMap[def.currentRarity]) {
+            displayRarity = def.rarityMap[def.currentRarity];
+          }
           activeFilters.push(displayRarity);
         }
         filterText = activeFilters.join(', ');
-        if (filterText.length > 20) filterText = filterText.substring(0, 20) + '...';
+        if (filterText.length > 20) {
+          filterText = filterText.substring(0, 20) + '...';
+        }
       }
       
       def.filterDropdown.innerHTML = `${filterText}`;
@@ -534,16 +526,19 @@ const require = (function() {
     
     const typeSection = document.createElement('div');
     typeSection.className = 'dropdown-section';
+    
     const typeTitle = document.createElement('div');
     typeTitle.className = 'dropdown-section-title';
     typeTitle.textContent = 'Type';
     typeSection.appendChild(typeTitle);
+    
     const allTypesBtn = document.createElement('button');
     allTypesBtn.className = `dropdown-filter-btn ${!def.currentType ? 'active' : ''}`;
     allTypesBtn.textContent = 'All Types';
     allTypesBtn.setAttribute('data-filter-type', 'type');
     allTypesBtn.setAttribute('data-filter-value', 'all');
     typeSection.appendChild(allTypesBtn);
+    
     def.allTypes.forEach(type => {
       const typeBtn = document.createElement('button');
       typeBtn.className = `dropdown-filter-btn ${def.currentType === type ? 'active' : ''}`;
@@ -552,30 +547,37 @@ const require = (function() {
       typeBtn.setAttribute('data-filter-value', type);
       typeSection.appendChild(typeBtn);
     });
+    
     def.dropdownMenu.appendChild(typeSection);
     
     const raritySection = document.createElement('div');
     raritySection.className = 'dropdown-section';
+    
     const rarityTitle = document.createElement('div');
     rarityTitle.className = 'dropdown-section-title';
     rarityTitle.textContent = 'Rarity';
     raritySection.appendChild(rarityTitle);
+    
     const allRaritiesBtn = document.createElement('button');
     allRaritiesBtn.className = `dropdown-filter-btn ${!def.currentRarity ? 'active' : ''}`;
     allRaritiesBtn.textContent = 'All Rarities';
     allRaritiesBtn.setAttribute('data-filter-type', 'rarity');
     allRaritiesBtn.setAttribute('data-filter-value', 'all');
     raritySection.appendChild(allRaritiesBtn);
+    
     def.allRarities.forEach(rarity => {
       const rarityBtn = document.createElement('button');
       rarityBtn.className = `dropdown-filter-btn ${def.currentRarity === rarity ? 'active' : ''}`;
       let displayName = rarity;
-      if (def.rarityMap[rarity]) displayName = def.rarityMap[rarity];
+      if (def.rarityMap[rarity]) {
+        displayName = def.rarityMap[rarity];
+      }
       rarityBtn.textContent = displayName;
       rarityBtn.setAttribute('data-filter-type', 'rarity');
       rarityBtn.setAttribute('data-filter-value', rarity);
       raritySection.appendChild(rarityBtn);
     });
+    
     def.dropdownMenu.appendChild(raritySection);
   }
 
@@ -587,10 +589,12 @@ const require = (function() {
       if (def.currentType) filterText.push(`Type: ${def.currentType}`);
       if (def.currentRarity) {
         let displayRarity = def.currentRarity;
-        if (def.rarityMap[def.currentRarity]) displayRarity = def.rarityMap[def.currentRarity];
-        filterText.push(``);
+        if (def.rarityMap[def.currentRarity]) {
+          displayRarity = def.rarityMap[def.currentRarity];
+        }
+        filterText.push(`Rarity: ${displayRarity}`);
       }
-      def.searchResults.textContent = `` : ''}`;
+      def.searchResults.textContent = `${itemCount} results ${filterText.length > 0 ? `(${filterText.join(', ')})` : ''}`;
     } else {
       def.searchResults.textContent = "";
     }
@@ -600,12 +604,20 @@ const require = (function() {
     if (def.currentMode !== "items") return;
     
     updateDropdownMenu();
+    
     const rect = def.filterDropdown.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const dropdownWidth = 220;
+    
     let leftPosition = rect.right - dropdownWidth;
-    if (leftPosition < 10) leftPosition = 10;
-    if (leftPosition + dropdownWidth > viewportWidth - 10) leftPosition = viewportWidth - dropdownWidth - 10;
+    if (leftPosition < 10) {
+      leftPosition = 10;
+    }
+    
+    if (leftPosition + dropdownWidth > viewportWidth - 10) {
+      leftPosition = viewportWidth - dropdownWidth - 10;
+    }
+    
     def.dropdownMenu.style.left = leftPosition + 'px';
     def.dropdownMenu.style.top = rect.bottom + 10 + 'px';
     def.dropdownMenu.style.right = 'auto';
@@ -626,16 +638,16 @@ const require = (function() {
 
   function openPageSheet() {
     def.pagesGrid.innerHTML = "";
+    
     for (let i = 1; i <= def.totalPages; i++) {
       const btn = document.createElement('button');
       btn.className = `sheet-page-btn ${i === def.currentPage ? 'active' : ''}`;
       btn.textContent = i;
       def.pagesGrid.appendChild(btn);
     }
+    
     openSheet(def.pageSheet);
   }
-
-  function openSearchSheet() { openSheet(def.searchSheet); }
 
   function openSheet(sheet) {
     closeAllSheets();
@@ -648,7 +660,6 @@ const require = (function() {
   function closeAllSheets() {
     document.body.style.touchAction = '';
     def.pageSheet.classList.remove('active');
-    def.searchSheet.classList.remove('active');
     def.fadeBg.classList.remove('active');
   }
 
@@ -657,6 +668,7 @@ const require = (function() {
     
     def.isModalAnimating = true;
     document.body.style.overflow = 'hidden';
+    
     const rect = box.getBoundingClientRect();
     
     def.modalContainer = document.createElement('div');
@@ -683,6 +695,7 @@ const require = (function() {
     setTimeout(() => {
       def.fadeBg.classList.add('active');
       def.modalContainer.classList.add('active');
+      
       modal.style.left = '50%';
       modal.style.top = 'calc(50% - 100px)';
       modal.style.transform = 'translate(-50%, -50%) scale(1.8)';
@@ -692,6 +705,7 @@ const require = (function() {
       setTimeout(() => {
         def.detailsCard = createDetailsCard(item);
         def.modalContainer.appendChild(def.detailsCard);
+        
         const modalRect = modal.getBoundingClientRect();
         def.detailsCard.style.left = '50%';
         def.detailsCard.style.top = (modalRect.bottom + 20) + 'px';
@@ -720,7 +734,9 @@ const require = (function() {
         const title = document.createElement('div');
         title.className = 'details-title ibm-plex-mono-bold';
         let titleText = item["3"];
-        if (item["4"]) titleText += ` - ${item["4"]}`;
+        if (item["4"]) {
+          titleText += ` - ${item["4"]}`;
+        }
         title.textContent = titleText;
         detailsCard.appendChild(title);
       }
@@ -775,6 +791,7 @@ const require = (function() {
     
     def.fadeBg.classList.remove('active');
     def.modalContainer.classList.remove('active');
+    
     const rect = def.originalBox.getBoundingClientRect();
     def.activeClone.style.left = rect.left + 'px';
     def.activeClone.style.top = rect.top + 'px';
@@ -783,7 +800,9 @@ const require = (function() {
     def.activeClone.style.transform = 'translate(0,0) scale(1)';
     
     setTimeout(() => {
-      if (def.modalContainer && def.modalContainer.parentNode) def.modalContainer.remove();
+      if (def.modalContainer && def.modalContainer.parentNode) {
+        def.modalContainer.remove();
+      }
       def.activeClone = null;
       def.modalContainer = null;
       def.detailsCard = null;
@@ -794,4 +813,4 @@ const require = (function() {
   return { init: init };
 })();
 
-document.addEventListener('DOMContentLoaded', function() { require.init(); });
+document.addEventListener('DOMContentLoaded', function() {require.init();});
