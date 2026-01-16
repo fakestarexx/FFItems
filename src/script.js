@@ -588,9 +588,9 @@ const require = (function() {
       if (def.currentRarity) {
         let displayRarity = def.currentRarity;
         if (def.rarityMap[def.currentRarity]) displayRarity = def.rarityMap[def.currentRarity];
-        filterText.push(`Rarity: ${displayRarity}`);
+        filterText.push(``);
       }
-      def.searchResults.textContent = `${itemCount} results ${filterText.length > 0 ? `(${filterText.join(', ')})` : ''}`;
+      def.searchResults.textContent = `` : ''}`;
     } else {
       def.searchResults.textContent = "";
     }
