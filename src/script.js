@@ -1,3 +1,6 @@
+/**
+ * @license MIT
+*/
 const require = (function() {let def={grid:null,fadeBg:null,pagePill:null,footerPill:null,filterDropdown:null,dropdownMenu:null,pageSheet:null,searchSheet:null,searchTextarea:null,pagesGrid:null,searchResults:null,modeTab:null,activeClone:null,originalBox:null,detailsCard:null,modalContainer:null,currentPage:1,itemsPerPage:100,allItems:[],allIcons:[],filteredItems:[],filteredIcons:[],totalPages:1,currentSearchQuery:"",currentMode:"items",currentType:"",currentRarity:"",allTypes:[],allRarities:[],imageCache:new Map,failedImages:new Set,isModalAnimating:false,isDropdownOpen:false,rarityMap:{WHITE:"Common",BLUE:"Rare",GREEN:"Uncommon",ORANGE:"Mythic",ORANGE_PLUS:"Mythic+",PURPLE:"Epic",PURPLE_PLUS:"Epic+",RED:"Artifact",NONE:"None"}};
   function init() { setupElements(); setupEventDelegation(); parseURLParameters(); fetchData(); createDropdownMenu();  }
   function setupElements() {
@@ -73,9 +76,8 @@ const require = (function() {let def={grid:null,fadeBg:null,pagePill:null,footer
     if (def.currentSearchQuery) {
       urlParams.set('q', def.currentSearchQuery);
     }
-    const newUrl = urlParams.toString() ? `${window.location.pathname}?${urlParams.toString()}` : window
-      .location.pathname;
-    window.history.replacedef({}, '', newUrl);
+    const newUrl = urlParams.toString() ? `${window.location.pathname}?${urlParams.toString()}` : window.location.pathname;
+    window.history.replaceState({}, '', newUrl); // Fixed this line
   }
   
   function handleDocumentClick(e) {
@@ -194,6 +196,13 @@ const require = (function() {let def={grid:null,fadeBg:null,pagePill:null,footer
   }
   function fetchData() {
     Promise.all([
+        /**
+         *  itemData.json
+         *  @credit ShahGCreator
+         * 
+         *  assets.json
+         *  @credit CrystalPerson
+        */
       fetch('src/assets/itemData.json').then(r => r.ok ? r.json() : Promise.reject()),
       fetch('src/assets/assets.json').then(r => r.ok ? r.json() : Promise.reject())
     ]).then(([itemsData, iconsData]) => {
@@ -217,6 +226,7 @@ const require = (function() {let def={grid:null,fadeBg:null,pagePill:null,footer
   }
   
 function getImageUrl(iconName, itemID) {
+  // Condition: If iconName(1) not found
   if (!iconName) return 'src/icons/not-found.png';
   if (iconName.includes('https://')) return iconName;
   return null;
@@ -226,12 +236,12 @@ function createImageElement(iconName, className, altText, itemID) {
   const icon = document.createElement('img');
   icon.className = className;
   icon.alt = altText || 'Free Fire Item';
-  /* @return Fallback Image */
+  // Condition: If image not found
   const final = 'icons/not-found.png';
   const urls = [];
   /**
    *  First priority
-   *  @credit Crystal-Person
+   *  @author Crystal-Person
   */
   if (iconName) {
     urls.push(
@@ -241,7 +251,7 @@ function createImageElement(iconName, className, altText, itemID) {
   
   /**
      *  Second priority
-     *  @credit IshowAkiru
+     *  @author IshowAkiru
    * 
   */
   if (itemID) {
@@ -252,7 +262,7 @@ function createImageElement(iconName, className, altText, itemID) {
   
   /**
    *  Last priority
-   *  @credit ShahGCreator
+   *  @author ShahGCreator
   */
   if (itemID) {
     urls.push(`https://iconapi.wasmer.app/${itemID}`);
