@@ -334,7 +334,7 @@ const require = (function() {
     const urls = [];
     
     if (iconName) {
-      urls.push(`https://raw.githubusercontent.com/0xme/ff-resources/refs/heads/main/pngs/300x300/${iconName}.png`);
+      urls.push(`https://cdn.jsdelivr.net/gh/0xme/ff-resources@main/pngs/300x300/${iconName}.png`);
     }
     
     if (itemID) {
