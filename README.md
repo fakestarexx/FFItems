@@ -19,12 +19,12 @@
   ```json
   [
     {
-     "1": iconName,
-     "2": itemID, 
-     "3": name,
-     "4": description,
-     "5": rarity,
-     "6": type
+     "1": "iconName",
+     "2": "itemID", 
+     "3": "name",
+     "4": "description",
+     "5": "rarity",
+     "6": "type"
     }
   ]
   ```
@@ -96,3 +96,7 @@ def searchItems(query):
 - Search supports partial matches and is case-insensitive
 - Empty query returns all items (Web, API)
 - Use direct links: https://starexx.vercel.app/?q={ItemID}
+
+<br>
+
+**Author**: Ankit Mehta ([realstarexx](https://github.com/realstarexx), [fakestarexx](https://github.com/fakestarexx))
